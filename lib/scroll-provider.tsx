@@ -16,8 +16,18 @@ gsap.registerPlugin(ScrollTrigger);
 let active: Lenis | null = null;
 
 export function scrollToTop() {
-  if (active) active.scrollTo(0, { immediate: true });
-  else window.scrollTo(0, 0); // reduced motion: Lenis is never started
+  scrollToY(0, true);
+}
+
+/**
+ * Programmatic scroll that actually works.
+ * `window.scrollTo` is inert while Lenis owns the scroll — it silently does
+ * nothing, which is how the four-walls keyboard handler failed INV-5 on its
+ * first pass. Always route through here.
+ */
+export function scrollToY(y: number, immediate = false) {
+  if (active) active.scrollTo(y, immediate ? { immediate: true } : { duration: 0.5 });
+  else window.scrollTo({ top: y, behavior: "auto" }); // reduced motion: no Lenis
 }
 
 // INV-1 is re-checked at every one of the nine gates, so it needs to stay

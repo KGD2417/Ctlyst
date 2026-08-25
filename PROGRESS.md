@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L4 · iteration 1/3 — home
+Loop: L5 · iteration 1/3 — The Gap (the signature)
 Blocked on: —
 
 ## Gates passed
@@ -14,7 +14,8 @@ Blocked on: —
       `evidence/L2b-5-empty-390.png`, `evidence/L2b-4-home-1440.png`
 - [x] L3 — preloader verified 2026-08-25. Evidence: `evidence/L3-1-preload-mid.png`,
       `evidence/L3-2-nav-1440.png`
-- [ ] L4 — home
+- [x] L4 — home verified 2026-08-25. Evidence: `evidence/L4-1-hero-1440.png`,
+      `evidence/L4-2-numbers.png`, `evidence/L4-3-keyboard-panel.png`, `evidence/L4-4-home-390.png`
 - [ ] L5 — the Gap
 - [ ] L6 — remaining routes
 - [ ] L7 — join
@@ -89,6 +90,32 @@ the navbar was Cormorant text, so the Flip was landing one artwork on top of a d
 one — a swap disguised as a transform. Both now render the same `<Monogram/>`, so the
 mark genuinely *becomes* the logo. Interpuncts also moved from the baseline to mid
 cap-height, where an interpunct belongs.
+
+## L4 gate record
+| Criterion | Result |
+|---|---|
+| Screenshots reviewed, 1440 + 390 | ✓ hero, numbers, walls, band, tri-fold |
+| Four-walls keyboard-navigable (INV-5) | ✓ all 4 panels reachable; **heading and body fully in viewport** for each; `scrollLeft` clamped to 0 |
+| Four-walls stacks under 768px (INV-4) | ✓ separately-authored stack; no pin, no horizontal overflow |
+| Counters scrub, not fire-once | ✓ 4 scrub triggers; under reduced motion they print the final value |
+| Tri-fold uses Flip, not scale (INV-3) | ✓ grid-template-columns animated via Flip |
+| No invariant regressed | ✓ churn flat over 5 rounds: 5 triggers, 12 tweens, 4 ticker listeners, 6 split lines |
+| Reduced motion | ✓ 0 triggers, no pin, no scrub, hero visible, Lenis off |
+
+### §4.2 critique
+1. **Would I have produced this for any editorial brief?** The stat row would have been —
+   four centred numbers is the default. Changed to left-aligned mono figure with the unit
+   in Garamond italic beneath, which is the §7 serif/mono tension doing actual work.
+2. **Does the motion serve the content?** The four-walls pin earns it: scrolling *past*
+   the walls is hitting them. The counters earn scrub because the figure is the argument.
+   The tri-fold Flip earns it because comparing pillars is the reader's actual task.
+3. **Anything overlapping or clipping?** Yes, and it was shipped-then-caught: `34,000+`
+   and `48%` collided at 1440 because the unit was set inline at display size. Fixed.
+4. **Which invariant was most at risk?** INV-5 — and it genuinely failed three times
+   before the real cause surfaced.
+5. **The one accessory to remove?** The `data-cursor` disc on the tri-fold columns. The
+   Flip already says "this column is active"; the cursor saying it too is redundant.
+   *Kept for now only because §8 names it explicitly; first thing to cut at L8 if needed.*
 
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·

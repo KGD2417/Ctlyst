@@ -105,3 +105,38 @@ body {
 /* The ambient stack is fixed at z-0; static content would paint beneath it,
    so page content is lifted into its own layer above. */
 main, footer { position: relative; z-index: 1; }
+
+/* SplitText line masks — the wrapper SplitText generates with mask:"lines" */
+.sl-line { display: block; }
+
+/* §9.6 misregistration: the crimson channel prints slightly out of register for
+   the duration of the reveal, then snaps true. Two uses site-wide. */
+@keyframes misreg-settle {
+  from { transform: translate(var(--misreg), calc(var(--misreg) * -0.4)); opacity: .55; }
+  to   { transform: none; opacity: 0; }
+}
+.misreg { position: relative; }
+.misreg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--color-crimson);
+  mix-blend-mode: multiply;
+  opacity: 0;
+  animation: misreg-settle 1.1s var(--ease-brand) 0.15s 1 both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .misreg::after { animation: none; opacity: 0; }
+}
+
+/* Figure size for multi-column stat rows. `t-mono-data` (up to 5rem) is sized
+   for the wide scheme cards; in a 4-up grid it overflows the column. */
+.t-mono-figure {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 3.1vw, 3.1rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
