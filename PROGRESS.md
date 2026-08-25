@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L6 · iteration 1/3 — remaining routes (/model, /why, /schemes, /roadmap)
+Loop: L7 · iteration 1/3 — join (the form)
 Blocked on: —
 
 ## Gates passed
@@ -18,7 +18,8 @@ Blocked on: —
       `evidence/L4-2-numbers.png`, `evidence/L4-3-keyboard-panel.png`, `evidence/L4-4-home-390.png`
 - [x] L5a — mechanic verified 2026-08-25. Evidence: `evidence/L5a-1-gap-closed.png`
 - [x] L5b — shader verified 2026-08-25. Evidence: `evidence/L5b-4-095.png`
-- [ ] L6 — remaining routes
+- [x] L6 — all four routes verified 2026-08-25. Evidence: `evidence/L6-model-diagram.png`,
+      `evidence/L6-why-table.png`, `evidence/L6-schemes-1440.png`, `evidence/L6-roadmap-1440.png`
 - [ ] L7 — join
 - [ ] L8 — hardening
 
@@ -136,6 +137,27 @@ that never closed, which would have made the section meaningless. Measured in
 | Skipped under reduced motion | ✓ |
 | L5a DOM crossfade remains the fallback | ✓ the seam element is always rendered; the shader only layers over it |
 | **INV-6: three.js out of first load** | ✓ **202.3 KB at top of page**; the 228.7 KB three chunk arrives only on reaching The Gap |
+
+## L6 gate record
+Gated per route, not as a batch.
+
+| Route | Mechanic | Result |
+|---|---|---|
+| `/model` | **§10 corrected operating model** — hand-authored SVG, DrawSVG stroke-in | ✓ 21 nodes, 23 drawn edges. Three intake pipelines, sign-up after intake, diagnosis replacing self-selection, mentor and capital tracks on separate clocks, four drawn failure states, loops returning to diagnosis, terminal outcome ledger, every node tagged Manual/Assisted/Automated. **The client's single-funnel flowchart does not appear** |
+| `/why` | Comparison table — the highest-value target | ✓ competitor rows reveal in sequence with hairline dashes drawing into blank cells; **the CTLYST row arrives last and differently**, a crimson rule drawing across it and checks drawing into each cell. Stays a real `<table>` |
+| `/schemes` | Six cards, scrubbed rupee figures, gold perimeter on hover | ✓ |
+| `/roadmap` | Vertical rule drawing down, dots filling crimson as it passes | ✓ numbered markers earned here and only here |
+
+| Invariant | All four routes |
+|---|---|
+| Reduced motion | ✓ 0 triggers, no pin, no scrub, **0 elements left invisible** |
+| Mobile 390 | ✓ no pin, no horizontal overflow |
+| INV-1 churn | ✓ 3 rounds × 6 routes: 7 triggers, 17 tweens, 4 ticker listeners — flat |
+| Page errors | ✓ none |
+
+The `/why` candour section is deliberately held plain — no motion beyond a fade. It is the
+most persuasive passage on the site precisely because nobody else writes it, and dressing
+it up would undercut that.
 
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
