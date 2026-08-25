@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "@/lib/use-gsap";
 import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { Flip } from "gsap/Flip";
@@ -20,15 +21,19 @@ gsap.registerPlugin(DrawSVGPlugin, Flip);
 const CAP_MS = 2200;
 
 export function Preloader() {
+  // Read the media query as an external store rather than setting state inside
+  // an effect. Under reduced motion the preloader must never mount at all
+  // (INV-2), and this decides that during render instead of after it.
+  const reducedMotion = useReducedMotion();
   const [done, setDone] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const mark = useRef<HTMLDivElement>(null);
   const count = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    // INV-2 — skipped entirely under reduced motion.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDone(true);
+    // INV-2 — skipped entirely under reduced motion. No setState here: `done`
+    // is derived below, and this only records the flag other code waits on.
+    if (reducedMotion) {
       document.documentElement.dataset.preloaded = "true";
       return;
     }
@@ -139,9 +144,9 @@ export function Preloader() {
       window.clearTimeout(backstop);
       ctx.revert();
     };
-  }, []);
+  }, [reducedMotion]);
 
-  if (done) return null;
+  if (done || reducedMotion) return null;
 
   return (
     <div

@@ -4,7 +4,7 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import gsap from "gsap";
+import { wipe } from "@/lib/ui-motion";
 import { numeralFor } from "@/lib/routes";
 import { scrollToTop } from "@/lib/scroll-provider";
 
@@ -20,10 +20,6 @@ import { scrollToTop } from "@/lib/scroll-provider";
  * One continuous upward motion, like a page turning.
  */
 
-// power3.out is one of the three sanctioned brand eases (PLAN §3) and costs nothing.
-// CustomEase would reproduce cubic-bezier(0.22,1,0.36,1) exactly but adds ~3 KB,
-// which would give back a fifth of what dropping `motion` just saved.
-const EASE   = "power3.out";
 const COVER  = 0.26; // s
 const HOLD   = 0.05; // s
 const REVEAL = 0.26; // s  → 570ms nominal, leaving headroom under the 700ms gate
@@ -65,10 +61,10 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
       setNumeral(numeralFor(href));
       el.style.visibility = "visible";
 
-      // yPercent, not translateY strings — GSAP writes it to the transform matrix,
-      // so this stays transform-only (INV-3) and stays on the compositor.
-      gsap.set(el, { yPercent: 100 });
-      await gsap.to(el, { yPercent: 0, duration: COVER, ease: EASE });
+      // Motion drives this through WAAPI, so the wipe runs on the compositor
+      // and a busy main thread cannot stutter it mid-transition.
+      el.style.transform = "translateY(100%)";
+      await wipe(el, "cover", COVER);
 
       router.push(href);
       scrollToTop();
@@ -89,7 +85,7 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         await new Promise((r) => setTimeout(r, HOLD * 1000));
         if (cancelled) return;
-        await gsap.to(el, { yPercent: -100, duration: REVEAL, ease: EASE });
+        await wipe(el, "reveal", REVEAL);
         if (cancelled) return;
         el.style.visibility = "hidden";
         setNumeral("");

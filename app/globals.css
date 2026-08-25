@@ -162,6 +162,9 @@ main, footer { position: relative; z-index: 1; }
    Kept in CSS rather than an inline style object so the INV-3 grep, which looks
    for layout properties at animation call sites, does not false-positive. */
 .gap-seam {
+  /* The blur is rasterised once into its own layer; without the hint the browser
+     re-blurs on every opacity step of the scrub. */
+  will-change: opacity;
   background: radial-gradient(
     ellipse 50% 60% at 50% 50%,
     color-mix(in srgb, var(--color-crimson) 22%, transparent) 0%,

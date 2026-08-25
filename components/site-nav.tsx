@@ -10,8 +10,9 @@ export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Close on route change, and on Escape (INV-5 — keyboard must get back out)
-  useEffect(() => setOpen(false), [pathname]);
+  // Closing on navigation is handled where navigation happens (onClick below),
+  // not in an effect keyed on pathname — that was a synchronous setState inside
+  // an effect, which React 19 flags as a cascading render.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -21,12 +22,18 @@ export function SiteNav() {
 
   const linkClass = (href: string) => {
     const active = pathname === href;
+    if (href === "/demo") {
+      // marked apart from the editorial nav: it is an instrument, not a page
+      return `t-mono-label whitespace-nowrap border-b border-dotted pb-1 transition-colors duration-[280ms] ${
+        active ? "border-gold text-gold" : "border-rule text-muted hover:text-gold"
+      }`;
+    }
     if (href === "/join") {
-      return `t-mono-label border px-5 py-2.5 transition-colors duration-[280ms] ${
+      return `t-mono-label border px-4 py-2.5 whitespace-nowrap transition-colors duration-[280ms] lg:px-5 ${
         active ? "border-crimson bg-crimson text-paper" : "border-ink text-ink hover:bg-ink hover:text-paper"
       }`;
     }
-    return `t-mono-label border-b pb-1 transition-colors duration-[280ms] ${
+    return `t-mono-label whitespace-nowrap border-b pb-1 transition-colors duration-[280ms] ${
       active ? "border-crimson text-crimson" : "border-transparent text-ink-soft hover:text-crimson"
     }`;
   };
@@ -38,7 +45,7 @@ export function SiteNav() {
         Mumbai · Maharashtra · Est. MMXXVI
       </div>
 
-      <nav className="mx-auto flex max-w-[1180px] items-center justify-between px-8 py-4">
+      <nav className="mx-auto flex max-w-[1280px] items-center justify-between gap-6 px-6 py-4 lg:px-8">
         <CurtainLink
           href="/"
           data-navmark
@@ -49,7 +56,7 @@ export function SiteNav() {
         </CurtainLink>
 
         {/* desktop */}
-        <ul className="hidden items-center gap-8 md:flex">
+        <ul className="hidden items-center gap-5 md:flex lg:gap-7">
           {ROUTES.slice(1).map((r) => (
             <li key={r.href}>
               <CurtainLink
@@ -91,6 +98,7 @@ export function SiteNav() {
           <CurtainLink
             key={r.href}
             href={r.href}
+            onClick={() => setOpen(false)}
             aria-current={pathname === r.href ? "page" : undefined}
             className={`t-mono-label text-base ${pathname === r.href ? "text-crimson" : "text-ink-soft"}`}
           >

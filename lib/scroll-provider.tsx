@@ -57,7 +57,13 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
 
     const start = () => {
       if (lenis || reduced.matches) return;
-      lenis = new Lenis({ autoRaf: false, lerp: 0.1 });
+      lenis = new Lenis({
+        autoRaf: false,
+        // 0.1 trails the input far enough to read as lag rather than as weight.
+        lerp: 0.14,
+        wheelMultiplier: 1,
+        touchMultiplier: 1.6,
+      });
       active = lenis;
       lenis.on("scroll", ScrollTrigger.update);
       if (process.env.NODE_ENV !== "production") {

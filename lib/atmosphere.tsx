@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { SHAPES, NATURAL, arrangementFor, type Placement } from "@/lib/guilloche-paths";
+import { dampFactor, changed } from "@/lib/damp";
 
 /**
  * Ambient background (§9). Five layers:
@@ -139,18 +140,31 @@ export function Atmosphere() {
       };
       if (pointerOn) window.addEventListener("pointermove", onMove, { passive: true });
 
-      const tick = () => {
+      let lastC = NaN, lastCx = NaN, lastB = NaN;
+
+      const tick = (_t: number, dt: number) => {
         const y = window.scrollY;
         if (pointerOn) {
-          state.px += (state.tx - state.px) * 0.02;
-          state.py += (state.ty - state.py) * 0.02;
+          // frame-rate independent, so the pointer response settles in the same
+          // wall-clock time at 60Hz and at 120Hz
+          const a = dampFactor(0.02, dt);
+          state.px += (state.tx - state.px) * a;
+          state.py += (state.ty - state.py) * a;
         }
-        if (layerC.current) {
+
+        const cy = -y * 0.15 + state.py;
+        const by = -y * 0.05;
+
+        // Only touch the DOM when a value actually moved. Previously both layers
+        // were rewritten every frame forever, even on a completely idle page.
+        if (layerC.current && (changed(cy, lastC) || changed(state.px, lastCx))) {
+          lastC = cy; lastCx = state.px;
           layerC.current.style.transform =
-            `translate3d(${state.px}px, ${-y * 0.15 + state.py}px, 0)`;
+            `translate3d(${state.px.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
         }
-        if (layerB.current) {
-          layerB.current.style.transform = `translate3d(0, ${-y * 0.05}px, 0)`;
+        if (layerB.current && changed(by, lastB)) {
+          lastB = by;
+          layerB.current.style.transform = `translate3d(0, ${by.toFixed(2)}px, 0)`;
         }
       };
       gsap.ticker.add(tick);
@@ -167,12 +181,18 @@ export function Atmosphere() {
   return (
     <div ref={root} aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {/* B · fibre */}
-      <div ref={layerB} className="absolute inset-[-10%] opacity-[0.07]" data-fibre />
+      <div
+        ref={layerB}
+        className="absolute inset-[-10%] opacity-[0.07]"
+        style={{ willChange: "transform" }}
+        data-fibre
+      />
 
       {/* D · wash — per-route tint, 2% */}
       {WASH[pathname] && (
         <div
           className="absolute inset-0 opacity-[0.02] transition-opacity duration-700"
+          // static: no will-change, so it does not claim its own layer
           style={{ background: WASH[pathname] }}
         />
       )}

@@ -85,19 +85,6 @@ export function JoinForm() {
     }
   }
 
-  // The seal is stamped in an effect, not inline after setState: the element
-  // does not exist until React has rendered the "sent" branch, so calling this
-  // straight after setState found a null ref and the seal stayed invisible.
-  useEffect(() => {
-    if (state !== "sent") return;
-    // Collapsing the form shortens the page by several hundred pixels, so every
-    // ScrollTrigger below it holds stale start/end values — the six-questions
-    // ledger stayed permanently invisible until this refresh was added.
-    requestAnimationFrame(() => ScrollTrigger.refresh());
-    if (!reduced()) stamp();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
   function stamp() {
     const wrap = sealWrap.current;
     if (!wrap) return;
@@ -110,6 +97,18 @@ export function JoinForm() {
         { drawSVG: "100%", duration: 0.6, ease: "power3.out", delay: 0.12 });
     }
   }
+
+  // The seal is stamped in an effect, not inline after setState: the element
+  // does not exist until React has rendered the "sent" branch, so calling this
+  // straight after setState found a null ref and the seal stayed invisible.
+  useEffect(() => {
+    if (state !== "sent") return;
+    // Collapsing the form shortens the page by several hundred pixels, so every
+    // ScrollTrigger below it holds stale start/end values — the six-questions
+    // ledger stayed permanently invisible until this refresh was added.
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+    if (!reduced()) stamp();
+  }, [state]);
 
   if (state === "sent") {
     return (

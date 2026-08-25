@@ -1,8 +1,8 @@
 # PROGRESS
 
 ## Current
-Loop: L8 complete. Build finished.
-Blocked on: — (one gate criterion fails; see the L8 record)
+Post-L8 revision: smoothness, error sweep, and the /demo pitch instrument.
+Blocked on: — (LCP still fails under simulated throttling; see the L8 record)
 
 ## Gates passed
 - [x] L0 — plan approved 2026-08-25 ("continue"); three questions defaulted, see Assumptions
@@ -242,6 +242,75 @@ not a bug fix, so it is flagged rather than taken unilaterally.
 - `heading-order`: section eyebrows were `<p>`, so `h1 → h3` skipped a level. They are the
   section heading, so they became `<h2>` with identical styling
 
+## Post-L8 revision (user request)
+
+### 1 · Smoothness — the actual causes
+Synthetic scrolling measured a clean 60fps on every route, so the jank was never
+reproducible in headless. Three real frame-rate bugs were found by reading the per-frame
+code rather than by measuring:
+
+- **Frame-rate-dependent lerps.** Both the cursor (`* 0.18`) and the ambient pointer
+  response (`* 0.02`) applied a fixed factor *per frame*. On a 120Hz display they settle
+  twice as fast as on 60Hz, and whenever the frame rate fluctuates the motion speed
+  fluctuates with it — which is exactly what reads as "glitchy" even with zero dropped
+  frames. Both now convert the per-frame factor to a per-second one (`lib/damp.ts`)
+- **Unconditional style writes.** The ambient stack rewrote `transform` on two full-screen
+  layers every single tick, forever, including on a completely idle page. Now written only
+  when a value actually moved
+- **Lenis `lerp: 0.1`** trailed the input far enough to read as lag rather than weight →
+  `0.14`
+- Four full-screen ambient layers were being promoted when only two move; the static wash
+  and vignette no longer claim compositor layers
+
+### 2 · `motion` reinstated, with a real division of labour
+Re-added on request, and it earns its place rather than duplicating GSAP:
+
+| | Drives | Why |
+|---|---|---|
+| **motion** (`lib/ui-motion.ts`) | route curtain, hover lifts, one-shot reveals | Web Animations API, so the browser can run transform/opacity on the **compositor**. A JS ticker cannot — every frame must land in main-thread time, so one long task is a visible hitch |
+| **GSAP** | scroll-scrubbed timelines, SplitText, DrawSVG, Flip | No WAAPI equivalent: driven by scroll position or needs layout measurement |
+
+Cost: first-load JS 202.4 → **224.1 KB** (budget 250). INV-6 still passes.
+
+### 3 · Error sweep
+- **ESLint: 3 errors → 0.** Two were synchronous `setState` inside an effect (React 19
+  cascading renders); `useReducedMotion` now uses `useSyncExternalStore`, which is the
+  right primitive for a `matchMedia` subscription. One was a use-before-declaration
+- **Runtime: 0 page errors, 0 console errors, 0 failed requests** across 24 loads
+  (6 routes × 2 breakpoints × 2 motion modes), and 0 across all 7 routes after the demo
+
+### 4 · `/demo` — the pitch instrument
+A **demonstration**, labelled as such on the page: illustrative data, no auth, no
+persistence, no writes. It exists so the founder can show the operating model running
+instead of describing it. Four founders mid-journey, the mentor bench and scheme registry
+behind them, and a terminal outcome ledger.
+
+Built to expose the four things a static page can only assert:
+1. **Diagnosis overrides the stated need** — "We need funding." struck through, beside what
+   diagnosis actually found
+2. **The two tracks run on different clocks** — mentor and capital shown in parallel, with
+   the capital track deliberately *held* for a founder who has no demand evidence yet
+3. **Failure states are handled** — "silent 21 days", "no mentor on bench"
+4. **Success is a specific outcome** — the ledger records a founder who shipped with no
+   capital raised, and a rejection that re-enters at diagnosis
+
+The lead scenario is the plan's own worked example (agri-tech prototype, ₹20 lakh SISFS
+grant, retired production engineer, ₹5 lakh award, illustrative 5% fee = ₹25,000). Names
+are invented; the mechanics are not.
+
+Nav is now seven routes with Demo before Join, so the CTA stays last in both the nav and
+the tab order. Verified unclipped at 1440, 1280 and 1024.
+
+### Post-revision verification
+| Check | Result |
+|---|---|
+| INV-6 first-load JS | ✓ worst **224.1 KB** of 250 (7 routes) |
+| Curtain on motion | ✓ 8 navigations, **628–649ms**, all landed, all covered, no flash, scroll reset every time |
+| INV-2 reduced motion | ✓ all 7 routes: Lenis off, cursor off, **0 elements invisible** |
+| Errors | ✓ 0 page, 0 console, 0 failed requests |
+| ESLint | ✓ clean |
+| Cursor + parallax | ✓ cursor scales 1.00 → 2.60; parallax −13.5 → −575px |
+
 ## Invariant status
 **All eight verified at L8** — see the table above.
 INV-1 ok · INV-2 ok · INV-3 ok · INV-4 ok · INV-5 ok · INV-6 ok (202.4/250 KB) ·
@@ -351,3 +420,13 @@ Things that broke and how they were fixed. Do not repeat these.
   *low*-contrast colour on the dark inverted bands. Check every ground the token lands on
 - **GSAP Flip tweens `width`/`height` by default** when the two states differ in size,
   which silently breaks INV-3. Pass `scale: true`
+- **`Math.abs(a - NaN) > epsilon` is always false**, so seeding a "last written value"
+  with NaN as a sentinel silently disables the guard forever. My own write-skipping
+  optimisation killed the custom cursor and the ambient parallax outright — they never
+  wrote a single transform. Caught only by testing the *behaviour*, not the code. `changed()`
+  now treats any non-finite previous value as different
+- **Frame-rate-dependent lerp is invisible on the machine you build on.** A fixed
+  per-frame factor is correct at exactly one refresh rate. Convert to per-second damping
+- **React 19's lint rejects synchronous `setState` inside an effect.** For anything that is
+  really an external store (`matchMedia`, a media query, a subscription),
+  `useSyncExternalStore` is the primitive that both satisfies the rule and hydrates cleanly

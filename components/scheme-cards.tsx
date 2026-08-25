@@ -5,6 +5,7 @@ import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGsapContext } from "@/lib/use-gsap";
 import { CountUp } from "@/lib/count-up";
+import { lift } from "@/lib/ui-motion";
 
 gsap.registerPlugin(DrawSVGPlugin, ScrollTrigger);
 
@@ -63,12 +64,14 @@ export function SchemeCards() {
       const cleanups: (() => void)[] = [];
       cards.forEach((card) => {
         const rule = card.querySelector<SVGPathElement>("[data-perimeter]");
+        // The lift goes through motion/WAAPI so it runs on the compositor; the
+        // perimeter stays on GSAP because DrawSVG has no WAAPI equivalent.
         const enter = () => {
-          gsap.to(card, { y: -6, duration: 0.32, ease: "power3.out" });
+          lift(card, true);
           if (rule) gsap.fromTo(rule, { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.62, ease: "power3.out" });
         };
         const leave = () => {
-          gsap.to(card, { y: 0, duration: 0.32, ease: "power3.out" });
+          lift(card, false);
           if (rule) gsap.to(rule, { drawSVG: "100% 100%", duration: 0.32, ease: "power3.out" });
         };
         card.addEventListener("mouseenter", enter);

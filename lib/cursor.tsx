@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { dampFactor, changed } from "@/lib/damp";
 
 /**
  * Ink dot that lerps behind the pointer. Grows over interactive elements,
@@ -18,7 +19,7 @@ export function CustomCursor() {
     const fine = window.matchMedia("(pointer: fine)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    let tick: ((t: number) => void) | null = null;
+    let tick: gsap.TickerCallback | null = null;
     let onMove: ((e: PointerEvent) => void) | null = null;
     let onOver: ((e: PointerEvent) => void) | null = null;
 
@@ -56,13 +57,25 @@ export function CustomCursor() {
         el.dataset.invert = t.closest("[data-invert]") ? "true" : "false";
       };
 
-      tick = () => {
-        // lerp — the dot trails the pointer rather than tracking it
-        pos.x += (target.x - pos.x) * 0.18;
-        pos.y += (target.y - pos.y) * 0.18;
-        scale += (targetScale - scale) * 0.18;
+      let lastX = NaN, lastY = NaN, lastS = NaN;
+
+      tick = (_t: number, dt: number) => {
+        // Frame-rate independent: a fixed per-frame factor made the dot settle
+        // at twice the speed on a 120Hz display, and wobble whenever the frame
+        // rate moved.
+        const a = dampFactor(0.18, dt);
+        pos.x += (target.x - pos.x) * a;
+        pos.y += (target.y - pos.y) * a;
+        scale += (targetScale - scale) * a;
+
+        // Skip the write when nothing moved — otherwise this invalidates style
+        // and recomposites every single frame for the life of the page.
+        // `changed` treats a non-finite previous value as different, so the very
+        // first frame always writes.
+        if (!changed(pos.x, lastX) && !changed(pos.y, lastY) && !changed(scale, lastS, 0.001)) return;
+        lastX = pos.x; lastY = pos.y; lastS = scale;
         el.style.transform =
-          `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+          `translate3d(${pos.x.toFixed(2)}px, ${pos.y.toFixed(2)}px, 0) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
       };
 
       window.addEventListener("pointermove", onMove, { passive: true });

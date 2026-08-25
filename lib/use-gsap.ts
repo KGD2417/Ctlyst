@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import gsap from "gsap";
 
 /**
@@ -26,17 +26,28 @@ export function useGsapContext<T extends HTMLElement>(
   return scope;
 }
 
-/** Live `prefers-reduced-motion` (INV-2) — re-renders when the OS setting flips. */
+/**
+ * Live `prefers-reduced-motion` (INV-2).
+ *
+ * useSyncExternalStore rather than useState + useEffect: matchMedia *is* an
+ * external store, and subscribing to it this way avoids a synchronous setState
+ * inside an effect (which React 19 flags as a cascading render) while still
+ * giving the server a defined value to hydrate against.
+ */
+const motionQuery = () =>
+  typeof window === "undefined" ? null : window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function subscribeMotion(onChange: () => void) {
+  const mq = motionQuery();
+  if (!mq) return () => {};
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
 export function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
-  return reduced;
+  return useSyncExternalStore(
+    subscribeMotion,
+    () => motionQuery()?.matches ?? false,
+    () => false, // server: assume motion is allowed, then correct on hydration
+  );
 }

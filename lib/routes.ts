@@ -5,7 +5,9 @@ export const ROUTES = [
   { href: "/why",     label: "Why Us",    numeral: "III" },
   { href: "/schemes", label: "Schemes",   numeral: "IV" },
   { href: "/roadmap", label: "Roadmap",   numeral: "V" },
-  { href: "/join",    label: "Join Us",   numeral: "VI" },
+  // Demo sits before Join so the CTA stays last in the nav and in the tab order.
+  { href: "/demo",    label: "Demo",      numeral: "VI" },
+  { href: "/join",    label: "Join Us",   numeral: "VII" },
 ] as const;
 
 export type Route = (typeof ROUTES)[number];
