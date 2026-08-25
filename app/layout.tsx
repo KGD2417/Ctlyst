@@ -3,6 +3,7 @@ import { Cormorant_Garamond, EB_Garamond, IBM_Plex_Mono } from "next/font/google
 import { ScrollProvider } from "@/lib/scroll-provider";
 import { CurtainProvider } from "@/lib/curtain";
 import { CustomCursor } from "@/lib/cursor";
+import { Atmosphere } from "@/lib/atmosphere";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <ScrollProvider>
           <CurtainProvider>
+            <Atmosphere />
             <SiteNav />
             {children}
             <SiteFooter />

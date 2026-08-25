@@ -70,6 +70,7 @@ html {
 
 body {
   background: var(--color-paper);
+  position: relative;
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: 1.15rem;
@@ -100,3 +101,7 @@ body {
    Text fields keep theirs — an I-beam is information, not decoration. */
 .has-cursor, .has-cursor * { cursor: none; }
 .has-cursor input, .has-cursor textarea, .has-cursor select { cursor: auto; }
+
+/* The ambient stack is fixed at z-0; static content would paint beneath it,
+   so page content is lifted into its own layer above. */
+main, footer { position: relative; z-index: 1; }

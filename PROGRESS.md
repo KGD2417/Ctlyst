@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L2b · iteration 1/3 — atmosphere
+Loop: L3 · iteration 1/3 — preloader
 Blocked on: —
 
 ## Gates passed
@@ -10,7 +10,8 @@ Blocked on: —
       `evidence/L1-1-harness-390.png`; measurements in the L1 gate record below
 - [x] L2 — shell verified 2026-08-25. Evidence: `evidence/L2-4-curtain-1440.png`,
       `evidence/L2-3-mobilenav-390.png`, `evidence/L2-2-home-1440.png`
-- [ ] L2b — atmosphere
+- [x] L2b — atmosphere verified 2026-08-25. Evidence: `evidence/L2b-5-empty-1440.png`,
+      `evidence/L2b-5-empty-390.png`, `evidence/L2b-4-home-1440.png`
 - [ ] L3 — preloader
 - [ ] L4 — home
 - [ ] L5 — the Gap
@@ -62,6 +63,17 @@ Font payload will need subsetting before L8.
 8 navigations, 609–642 ms, all landed, all scroll-reset, no flash.
 **Deviation from BRIEF §11**, which lists `motion` as a dependency. Its own rationale
 ("two libraries doing one job is how these builds bloat") supports the removal.
+
+## L2b gate record
+| Criterion | Result |
+|---|---|
+| Empty shell reads composed, 1440 + 390 | ✓ rosette bleeding left, **Y** cropped right, lathe band low, fibre throughout; nav still reads first |
+| Ambient ≤1ms/frame | **Indistinguishable from zero.** First attempt was vsync-clamped (16.7ms both ways, delta 0 — meaningless). Re-measured CPU-bound under a 26ms/frame synthetic load: 32.0 vs 33.3ms, delta **−1.3ms**, i.e. below the method's own noise floor. *Substitute method, not a devtools trace* |
+| Grain dynamically imported | ✓ separate chunk `lib_fibre_ts_*.js`; tile applied as a data URI; `hardwareConcurrency <= 4` / coarse-pointer path drops to a 64px, lower-density tile |
+| Reduced motion | ✓ 3 shapes remain and stay visible; drift frozen, parallax frozen, no transform written |
+| 60s without visible loop / re-sync | ✓ **64s observed**: no shape returned to its start, no two ever in lockstep. Durations 47/61/73s (prime), yoyo, so the true period is 2× and the set cannot realign |
+| Mobile cap (§9.5) | ✓ exactly 2 shapes at 390px |
+| INV-1 with atmosphere | ✓ 30 navigations: 3 tweens, 3 drift groups, 4 ticker listeners — all flat |
 
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
