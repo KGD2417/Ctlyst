@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, EB_Garamond, IBM_Plex_Mono } from "next/font/google";
 import { ScrollProvider } from "@/lib/scroll-provider";
+import { CurtainProvider } from "@/lib/curtain";
+import { CustomCursor } from "@/lib/cursor";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -41,7 +45,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${cormorant.variable} ${garamond.variable} ${plexMono.variable}`}
     >
       <body>
-        <ScrollProvider>{children}</ScrollProvider>
+        <ScrollProvider>
+          <CurtainProvider>
+            <SiteNav />
+            {children}
+            <SiteFooter />
+            <CustomCursor />
+          </CurtainProvider>
+        </ScrollProvider>
       </body>
     </html>
   );

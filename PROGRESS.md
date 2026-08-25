@@ -1,14 +1,15 @@
 # PROGRESS
 
 ## Current
-Loop: L2 · iteration 1/3 — shell
+Loop: L2b · iteration 1/3 — atmosphere
 Blocked on: —
 
 ## Gates passed
 - [x] L0 — plan approved 2026-08-25 ("continue"); three questions defaulted, see Assumptions
 - [x] L1 — harness verified 2026-08-25. Evidence: `evidence/L1-1-harness-1440.png`,
       `evidence/L1-1-harness-390.png`; measurements in the L1 gate record below
-- [ ] L2 — shell
+- [x] L2 — shell verified 2026-08-25. Evidence: `evidence/L2-4-curtain-1440.png`,
+      `evidence/L2-3-mobilenav-390.png`, `evidence/L2-2-home-1440.png`
 - [ ] L2b — atmosphere
 - [ ] L3 — preloader
 - [ ] L4 — home
@@ -41,10 +42,32 @@ chunk list, so the browser's own number is the ground truth.
 `motion`, and six routes. WebGL is dynamically imported so it stays out of first load.
 Font payload will need subsetting before L8.
 
+## L2 gate record
+| Criterion | Result |
+|---|---|
+| Transition both directions, all six routes | ✓ 11 navigations, all landed, **612–658ms** (gate: <700ms) |
+| No unstyled flash | ✓ body background stayed `--paper` through every transition |
+| No double-scrolled content | ✓ scrolled to 172–362 via **real wheel input**, every arrival `scrollY === 0` |
+| `ScrollTrigger.refresh()` after paint | ✓ **exactly 1** per nav, always after the destination `h1` is in the DOM, at ~320ms — i.e. while still covered, so the reflow is invisible |
+| Cursor off on touch | ✓ real coarse-pointer context: `pointer:coarse` true, no `has-cursor`, native cursor restored |
+| Cursor off under reduced motion | ✓ no `has-cursor`, opacity 0, Lenis also not running |
+| Cursor grows on interactive | ✓ scale 1.00 at rest → 2.60 over a nav link |
+| Focus ring (INV-5) | ✓ 14 focusables, all with 2px solid crimson, all on screen |
+| INV-1 with full shell | ✓ 30 navigations (5 rounds × 6 routes): triggers 0, tweens 1, ticker listeners 3 — all flat |
+
+**INV-6: 201.2 KB gzipped (was 186.6 at L1). Headroom 48.8 KB.**
+`motion` + shell cost 14.6 KB. Still to come: SplitText, DrawSVG, Flip, six route bodies.
+**Identified lever if this gets tight:** `motion` costs ~14.6 KB to animate one crimson
+rectangle that GSAP — already in the bundle — would animate for free. BRIEF §11 lists
+`motion` explicitly, so I have not removed it unilaterally, but its own stated rationale
+("two libraries doing one job is how these builds bloat") argues for cutting it. Flagged,
+not actioned.
+
 ## Invariant status
-INV-1 **ok** (measured) · INV-2 **ok** (measured, live) · INV-3 ok (grep clean) ·
-INV-4 ok (no pin, no h-overflow at 390) · INV-5 ok (focus ring set; real audit at L8) ·
-INV-6 **at risk — 186.6/250 KB used at L1** · INV-7 ok (grep clean) · INV-8 n/a (no brand copy yet)
+INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
+INV-4 ok (mobile nav works, no h-overflow at 390) · INV-5 **ok** (14 focusables, all ringed) ·
+INV-6 **at risk — 201.2/250 KB, 48.8 KB headroom** · INV-7 ok (grep clean; both `animate()`
+calls pin `type:"tween"`) · INV-8 ok (all route copy traces to `reference/CTLYST.html`)
 
 ## Decisions
 - **Mono face: IBM Plex Mono** — the only candidate of four with a ₹ glyph at correct
@@ -86,3 +109,21 @@ Things that broke and how they were fixed. Do not repeat these.
   comment or every future gate reports a false positive
 - Playwright MCP's `run_code_unsafe` sandbox has **no `require`, `import`, or `URL`** —
   do byte accounting inside `page.evaluate` with the Performance API instead
+- **`backdrop-filter` makes an element a containing block for `position: fixed`
+  descendants.** The mobile menu panel was `fixed inset-0` inside the blurred header and
+  positioned against the header instead of the viewport. Move such panels out to be a
+  sibling of the header
+- **A child's `z-index` cannot escape its parent's stacking context.** Raising the burger
+  to `z-130` inside a `z-120` header still left it under a `z-110` sibling panel. Fix the
+  stacking at the ancestor, not the child
+- **`motion`'s default animation type is a physics curve, not a tween** — every
+  `animate()` call must pass `type: "tween"` explicitly or it silently breaks INV-7
+- **Dev-only seams (`__ST`, `__lenis`) do not exist in a production build.** A production
+  test written against them silently measures nothing and reports a passing zero. Drive
+  production tests with real input (`page.mouse.wheel`) and assert the precondition
+  actually happened before trusting the result
+- **Repeated the INV-7 comment scar from L1** — wrote a banned word in a new comment in
+  `lib/curtain.tsx` and tripped the grep again. Reworded. Reading the Scars section is
+  only useful if it happens *before* writing the comment, not after the grep fails
+- Deleting a route leaves stale generated types in `.next/dev/types`; `rm -rf .next/dev
+  .next/types` before rebuilding or the build fails on a module that no longer exists

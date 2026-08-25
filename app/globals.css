@@ -31,7 +31,7 @@
   --dur-grave:   1.4s;
 
   /* ── fixed sequences ─────────────────────────────────────────── */
-  --curtain-total: 0.68s;
+  --curtain-total: 0.57s;
   --preload-cap:   2.2s;
   --seal:          0.78s;
 
@@ -95,3 +95,8 @@ body {
 .t-caption    { font-family: var(--font-body); font-style: italic; font-size: 0.95rem; line-height: 1.6; color: var(--color-muted); }
 .t-mono-label { font-family: var(--font-mono); font-weight: 400; font-size: 0.6875rem; line-height: 1; letter-spacing: 0.28em; text-transform: uppercase; }
 .t-mono-data  { font-family: var(--font-mono); font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* Native cursor hidden only when the custom one is actually running.
+   Text fields keep theirs — an I-beam is information, not decoration. */
+.has-cursor, .has-cursor * { cursor: none; }
+.has-cursor input, .has-cursor textarea, .has-cursor select { cursor: auto; }

@@ -8,6 +8,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * Module-level handle so the curtain can reset scroll *while it is covered*.
+ * Without this the incoming route paints at the outgoing route's scroll offset,
+ * which is exactly the "double-scrolled content" the L2 gate forbids.
+ */
+let active: Lenis | null = null;
+
+export function scrollToTop() {
+  if (active) active.scrollTo(0, { immediate: true });
+  else window.scrollTo(0, 0); // reduced motion: Lenis is never started
+}
+
 // INV-1 is re-checked at every one of the nine gates, so it needs to stay
 // measurable from outside the bundle. Dev only — never ships to production.
 if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
@@ -36,6 +48,7 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
     const start = () => {
       if (lenis || reduced.matches) return;
       lenis = new Lenis({ autoRaf: false, lerp: 0.1 });
+      active = lenis;
       lenis.on("scroll", ScrollTrigger.update);
       if (process.env.NODE_ENV !== "production") {
         (window as unknown as Record<string, unknown>).__lenis = lenis;
@@ -49,6 +62,7 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
       gsap.ticker.remove(update);
       lenis.destroy();
       lenis = null;
+      active = null;
     };
 
     const sync = () => (reduced.matches ? stop() : start());
