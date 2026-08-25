@@ -21,7 +21,7 @@ export default function JoinPage() {
   return (
     <main>
       <div className="mx-auto max-w-[1080px] border-b border-rule px-8 py-20 text-center">
-        <p className="t-mono-label text-gold">Join Us</p>
+        <h2 className="t-mono-label text-gold">Join Us</h2>
         <h1 className="t-display-l mt-6">
           Tell us where you are <em className="italic text-crimson">stuck.</em>
         </h1>
@@ -32,7 +32,7 @@ export default function JoinPage() {
       </div>
 
       <section className="mx-auto max-w-[1180px] px-8 py-20">
-        <p className="t-mono-label text-gold">I. Who Should Write</p>
+        <h2 className="t-mono-label text-gold">I. Who Should Write</h2>
         <Reveal className="mt-10 grid gap-6 md:grid-cols-3" selector="[data-row]" stagger={0.09}>
           {WHO.map((w) => (
             <article key={w.k} data-row className={`border border-rule p-8 ${w.tinted ? "bg-paper-warm" : ""}`}>
@@ -45,12 +45,12 @@ export default function JoinPage() {
       </section>
 
       <section className="mx-auto max-w-[780px] px-8 py-10">
-        <p className="t-mono-label text-gold">II. The Letter</p>
+        <h2 className="t-mono-label text-gold">II. The Letter</h2>
         <JoinForm />
       </section>
 
       <section className="mx-auto max-w-[1180px] px-8 py-20">
-        <p className="t-mono-label text-gold">III. Before You Write — Six Questions Worth Asking Yourself</p>
+        <h2 className="t-mono-label text-gold">III. Before You Write — Six Questions Worth Asking Yourself</h2>
         <Ledger rows={QUESTIONS} />
       </section>
 

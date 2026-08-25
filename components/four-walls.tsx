@@ -119,7 +119,7 @@ export function FourWalls() {
       >
         <div data-track className="flex h-full w-max">
           <div className="flex h-full w-screen shrink-0 flex-col justify-center px-[8vw]">
-            <p className="t-mono-label text-gold">II. The Four Walls</p>
+            <h2 className="t-mono-label text-gold">II. The Four Walls</h2>
             <h2 id="walls-heading" className="t-display-m mt-6 max-w-[16ch]">
               Talented founders stall — not for lack of merit, but at four{" "}
               <em className="italic text-crimson">practical walls.</em>
@@ -142,7 +142,7 @@ export function FourWalls() {
 
       {/* ── mobile: separately authored stack. No pin, no x. (INV-4) ────── */}
       <section aria-labelledby="walls-heading-m" className="px-6 py-20 md:hidden">
-        <p className="t-mono-label text-gold">II. The Four Walls</p>
+        <h2 className="t-mono-label text-gold">II. The Four Walls</h2>
         <h2 id="walls-heading-m" className="t-display-m mt-5">
           Talented founders stall — not for lack of merit, but at four{" "}
           <em className="italic text-crimson">practical walls.</em>

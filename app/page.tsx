@@ -20,7 +20,7 @@ export default function Home() {
     <main>
       {/* ── hero ─────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-8 pb-24 pt-20 md:pt-28">
-        <p className="t-mono-label text-gold">Bridging the gap between ideas and execution</p>
+        <h2 className="t-mono-label text-gold">Bridging the gap between ideas and execution</h2>
         {/* §9.6 misregistration — use 2 of 2 (the curtain numeral is use 1) */}
         <SplitLines className="t-display-xl mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
           <>
@@ -45,11 +45,11 @@ export default function Home() {
         </div>
       </section>
 
-      <p className="py-6 text-center text-xl text-gold">❦</p>
+      <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
       {/* ── I · ecosystem in numbers ─────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-8 py-16" aria-labelledby="numbers-heading">
-        <p className="t-mono-label text-gold">I. The Ecosystem in Numbers</p>
+        <h2 className="t-mono-label text-gold">I. The Ecosystem in Numbers</h2>
         <h2 id="numbers-heading" className="sr-only">The ecosystem in numbers</h2>
         <div className="mt-10 grid border-y border-ink sm:grid-cols-2 lg:grid-cols-4">
           {STATS.map((s, i) => (
@@ -85,7 +85,7 @@ export default function Home() {
 
       {/* ── insight band ─────────────────────────────────────────────── */}
       <section data-invert className="my-16 bg-ink px-8 py-24 text-center text-paper">
-        <p className="t-mono-label text-gold">The CTLYST Insight</p>
+        <h2 className="t-mono-label text-gold">The CTLYST Insight</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[24ch]">
           The resources India&rsquo;s founders need <em className="italic text-gold">already exist.</em>{" "}
           What is missing is the one trusted place that connects the right resource to the right
@@ -102,11 +102,11 @@ export default function Home() {
       {/* ── III · tri-fold ───────────────────────────────────────────── */}
       <TriFold />
 
-      <p className="py-6 text-center text-xl text-gold">❦</p>
+      <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
       {/* ── IV · the first step ──────────────────────────────────────── */}
       <section className="mx-auto max-w-[860px] px-8 py-24 text-center">
-        <p className="t-mono-label text-gold">IV. The First Step</p>
+        <h2 className="t-mono-label text-gold">IV. The First Step</h2>
         <h2 className="t-display-m mx-auto mt-6 max-w-[22ch]">
           Your idea deserves more than a bookmark folder of schemes you never applied to.
         </h2>

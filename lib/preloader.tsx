@@ -110,6 +110,10 @@ export function Preloader() {
         duration: 0.72,
         ease: "power3.inOut",
         absolute: true,
+        // INV-3: without this Flip tweens width/height to reconcile the size
+        // change (520px mark -> 131px navbar mark). scale:true makes it use
+        // scaleX/scaleY instead, so the handoff stays transform-only.
+        scale: true,
         onComplete: () => {
           target.style.visibility = "";
           finish();

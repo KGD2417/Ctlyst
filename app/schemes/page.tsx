@@ -6,7 +6,7 @@ export default function SchemesPage() {
   return (
     <main>
       <div className="mx-auto max-w-[1080px] border-b border-rule px-8 py-20 text-center">
-        <p className="t-mono-label text-gold">The Resource Ledger</p>
+        <h2 className="t-mono-label text-gold">The Resource Ledger</h2>
         <h1 className="t-display-l mt-6">
           The money is <em className="italic text-crimson">already there.</em><br />We help you reach it.
         </h1>
@@ -17,7 +17,7 @@ export default function SchemesPage() {
       </div>
 
       <section className="mx-auto max-w-[1180px] px-8 py-20">
-        <p className="t-mono-label text-gold">I. The Six Instruments</p>
+        <h2 className="t-mono-label text-gold">I. The Six Instruments</h2>
         <SchemeCards />
         <p className="t-caption mx-auto mt-10 max-w-[74ch] text-center">
           Indicative as of late 2025. Scheme terms, corpus sizes, and eligibility evolve —
@@ -29,7 +29,7 @@ export default function SchemesPage() {
       </section>
 
       <section data-invert className="my-12 bg-ink px-8 py-24 text-center text-paper">
-        <p className="t-mono-label text-gold">Why This Page Exists</p>
+        <h2 className="t-mono-label text-gold">Why This Page Exists</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Awareness of these schemes remains uneven —{" "}
           <em className="italic text-gold">lowest exactly where the need is highest:</em>{" "}
@@ -38,7 +38,7 @@ export default function SchemesPage() {
       </section>
 
       <section className="mx-auto max-w-[780px] px-8 py-16">
-        <p className="t-mono-label text-gold">II. A Worked Example</p>
+        <h2 className="t-mono-label text-gold">II. A Worked Example</h2>
         <h2 className="t-display-m mt-6">
           What navigation is <em className="italic text-crimson">worth.</em>
         </h2>

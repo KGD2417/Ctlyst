@@ -1,8 +1,8 @@
 # PROGRESS
 
 ## Current
-Loop: L8 · iteration 1/3 — hardening
-Blocked on: —
+Loop: L8 complete. Build finished.
+Blocked on: — (one gate criterion fails; see the L8 record)
 
 ## Gates passed
 - [x] L0 — plan approved 2026-08-25 ("continue"); three questions defaulted, see Assumptions
@@ -21,7 +21,7 @@ Blocked on: —
 - [x] L6 — all four routes verified 2026-08-25. Evidence: `evidence/L6-model-diagram.png`,
       `evidence/L6-why-table.png`, `evidence/L6-schemes-1440.png`, `evidence/L6-roadmap-1440.png`
 - [x] L7 — join verified 2026-08-25. Evidence: `evidence/L7-5-form.png`, `evidence/L7-4-sent.png`
-- [ ] L8 — hardening
+- [x] L8 — hardening complete 2026-08-26. **LCP fails under simulated throttling — reported, not hidden.**
 
 ## Assumptions (defaulted, not explicitly approved — reversible, flag if wrong)
 - Layer C ships at **1.25px / opacity 0.5** on `--rule` (ladder row D), not §9.2's literal values
@@ -176,11 +176,76 @@ gesture commits a native select value in headless Chromium, so that path was
 each is individually labelled and announced, arrow keys move natively, and the gate
 became testable instead of assumed.
 
+## L8 gate record
+
+### Lighthouse — all six routes, mobile emulation
+Default (**simulated / Lantern**) throttling, which is what "simulated Moto G4 / Fast 3G"
+in the gate names:
+
+| Route | Performance | Accessibility | Best Practices | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|
+| `/` | 96 | **100** | 100 | 2.72s ✗ | 0.002 | 10ms |
+| `/model` | 97 | **100** | 100 | 2.56s ✗ | 0.002 | 10ms |
+| `/why` | 92 | **100** | 100 | 3.22s ✗ | 0.002 | 10ms |
+| `/schemes` | 96 | **100** | 100 | 2.71s ✗ | 0.002 | 10ms |
+| `/roadmap` | 97 | **100** | 100 | 2.56s ✗ | 0.002 | 10ms |
+| `/join` | 97 | **100** | 100 | 2.56s ✗ | 0.002 | 10ms |
+
+With **applied** throttling (`--throttling-method=devtools`, real 4× CPU + Fast-3G network):
+
+| Route | Performance | FCP | LCP |
+|---|---|---|---|
+| `/` | 96 | 1.6s | **1.56s ✓** |
+| `/why` | 95 | 1.5s | **1.55s ✓** |
+
+### ✗ LCP FAILS THE GATE
+The gate is **LCP ≤ 2.5s on simulated Moto G4 / Fast 3G**. Under simulated throttling
+every route is between **2.56s and 3.22s**, so *the gate does not pass*. Under applied
+throttling the same pages measure 1.55–1.56s. Both are genuine Lighthouse runs; the gate
+names the simulated method, so the honest verdict is **fail**, and the passing number is
+context rather than a substitute.
+
+What was fixed while chasing it (LCP went 3.76 → 2.72s simulated):
+- Font payload 297 KB / 14 files → **161 KB / 6 files** by shipping only the weights used
+- The hero rendered at `opacity: 0` awaiting JS, so it was invisible to LCP until the
+  reveal ran — the LCP element was measured as the *small gold eyebrow*. Now server-rendered
+  visible, with the hidden start state set in a layout effect
+- `font-display: optional` was tried and **reverted**: it changed LCP by 0.00s, which is
+  what proved the delay was never font-blocked
+
+Remaining headroom is the preloader: it holds an opaque `--paper` overlay for ~1.95s
+before the Flip handoff. The L3 gate (preloader capped at 2.2s) and the L8 gate
+(LCP ≤ 2.5s simulated) are close to mutually exclusive on a throttled mobile connection.
+Resolving it means shortening or conditionally skipping the preloader — a design decision,
+not a bug fix, so it is flagged rather than taken unilaterally.
+
+### All eight invariants, verified with evidence
+| | Invariant | Verification |
+|---|---|---|
+| INV-1 | No timeline/ScrollTrigger/raf survives unmount | ✓ **30 navigations** (5 rounds × 6 routes): triggers 7, tweens 17, ticker listeners 4, split lines 6 — every count flat |
+| INV-2 | Reduced motion kills pin, scrub, hijack, cursor, WebGL | ✓ all six routes: Lenis off, cursor off, WebGL absent, **0 elements left invisible** |
+| INV-3 | Only transform and opacity animate | ✓ greps clean. The L3 Flip was tweening `width`/`height` to reconcile 520px → 131px; `scale: true` pins it to transforms, and the landing is still sub-pixel (dy 0.4px) |
+| INV-4 | Every pinned section has a stacked mobile variant | ✓ all six routes at 390px: no pin, no horizontal overflow, 2 ambient shapes |
+| INV-5 | Keyboard focus visible and functional everywhere | ✓ all six routes: 34 focusables each, **0 unringed, 0 off-screen**; the horizontal gallery scrolls focused panels fully into view; the form submits by keyboard alone |
+| INV-6 | ≤250KB gz first load; WebGL dynamic and skipped on low-end | ✓ worst route **202.4 KB**. three.js (228.7 KB) loads only on approaching The Gap, and not at all on coarse pointer / ≤4 cores |
+| INV-7 | No overshooting easings | ✓ grep clean across `app/`, `lib/`, `components/` |
+| INV-8 | All copy traces to a source document | ✓ 12/12 spot-checked phrases found in `reference/` |
+
+### Accessibility fixes made at L8
+- `aria-prohibited-attr`: SplitText was writing `aria-label` onto bare `<div>`s. Set `aria: "none"` — we split by line, not character, so the text still reads correctly
+- `color-contrast`: `--gold` at 3.27:1 and `--muted` at 3.97:1 failed at small sizes.
+  Added `--color-gold-ink` / `--color-muted-ink`, darkened until both clear AA on
+  `--paper` **and** `--paper-warm`. The inherited palette (§7) is untouched for ornament
+  and large type. A first attempt passed only on `--paper` and still failed inside tinted
+  cards; a second broke gold on the dark inverted bands until the variant was scoped to
+  light ground
+- `heading-order`: section eyebrows were `<p>`, so `h1 → h3` skipped a level. They are the
+  section heading, so they became `<h2>` with identical styling
+
 ## Invariant status
-INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
-INV-4 ok (mobile nav works, no h-overflow at 390) · INV-5 **ok** (14 focusables, all ringed) ·
-INV-6 **at risk — 201.2/250 KB, 48.8 KB headroom** · INV-7 ok (grep clean; both `animate()`
-calls pin `type:"tween"`) · INV-8 ok (all route copy traces to `reference/CTLYST.html`)
+**All eight verified at L8** — see the table above.
+INV-1 ok · INV-2 ok · INV-3 ok · INV-4 ok · INV-5 ok · INV-6 ok (202.4/250 KB) ·
+INV-7 ok · INV-8 ok
 
 ## Decisions
 - **Mono face: IBM Plex Mono** — the only candidate of four with a ₹ glyph at correct
@@ -274,3 +339,15 @@ Things that broke and how they were fixed. Do not repeat these.
 - **Headless Chromium does not commit `<select>` values from synthetic key events** —
   neither type-ahead, arrows, nor Enter. A keyboard gate on a native select cannot be
   verified in this harness; radios can
+- **Lighthouse's default throttling is SIMULATED (Lantern), not applied.** The same build
+  measures LCP 2.72s simulated and 1.56s applied. Neither is wrong; they answer different
+  questions. Always state which method a reported number came from
+- **An element starting at `opacity: 0` awaiting JS is invisible to LCP.** The hero was
+  excluded from LCP entirely until its reveal ran, and Lighthouse reported a small eyebrow
+  as the LCP element. Render content visible and set the animation's start state in a
+  layout effect
+- **A contrast fix computed against one background can break another.** Darkened gold
+  cleared `--paper` but still failed on `--paper-warm`, and a blanket override made it the
+  *low*-contrast colour on the dark inverted bands. Check every ground the token lands on
+- **GSAP Flip tweens `width`/`height` by default** when the two states differ in size,
+  which silently breaks INV-3. Pass `scale: true`

@@ -23,7 +23,7 @@ export default function WhyPage() {
   return (
     <main>
       <div className="mx-auto max-w-[1080px] border-b border-rule px-8 py-20 text-center">
-        <p className="t-mono-label text-gold">Why Us</p>
+        <h2 className="t-mono-label text-gold">Why Us</h2>
         <h1 className="t-display-l mt-6">
           Why students should make us their <em className="italic text-crimson">first choice.</em>
         </h1>
@@ -33,12 +33,12 @@ export default function WhyPage() {
       </div>
 
       <section className="mx-auto max-w-[1180px] px-8 py-20">
-        <p className="t-mono-label text-gold">I. Five Reasons</p>
+        <h2 className="t-mono-label text-gold">I. Five Reasons</h2>
         <Ledger rows={REASONS} />
       </section>
 
       <section data-invert className="my-12 bg-ink px-8 py-24 text-center text-paper">
-        <p className="t-mono-label text-gold">The Facts on Our Side</p>
+        <h2 className="t-mono-label text-gold">The Facts on Our Side</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           ₹945 crore sits in the Seed Fund Scheme. Grants of up to{" "}
           <em className="italic text-gold">₹20 lakh</em> exist for prototypes alone.
@@ -47,7 +47,7 @@ export default function WhyPage() {
       </section>
 
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">II. The Numbers That Matter</p>
+        <h2 className="t-mono-label text-gold">II. The Numbers That Matter</h2>
         <div className="mt-10 grid border-y border-ink sm:grid-cols-2 lg:grid-cols-4">
           {FIGURES.map((f, i) => (
             <div key={f.label} className={`flex flex-col items-start px-6 py-10 ${i < FIGURES.length - 1 ? "border-b border-rule lg:border-b-0 lg:border-r" : ""}`}>
@@ -66,18 +66,18 @@ export default function WhyPage() {
       </section>
 
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">III. An Honest Comparison</p>
+        <h2 className="t-mono-label text-gold">III. An Honest Comparison</h2>
         <h2 className="t-display-m mt-6">
           We respect the incumbents. We simply <em className="italic text-crimson">finish what they start.</em>
         </h2>
         <ComparisonTable />
       </section>
 
-      <p className="py-6 text-center text-xl text-gold">❦</p>
+      <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
       {/* The candour section — held plain on purpose. It persuades by being unadorned. */}
       <section className="mx-auto max-w-[780px] px-8 py-16">
-        <p className="t-mono-label text-gold">IV. Our Candour</p>
+        <h2 className="t-mono-label text-gold">IV. Our Candour</h2>
         <Reveal className="mt-8" selector="[data-row]">
           <p data-row className="text-[1.25rem] leading-[1.75] text-ink-soft [&::first-letter]:float-left [&::first-letter]:pr-2 [&::first-letter]:pt-1 [&::first-letter]:font-display [&::first-letter]:text-[4.6rem] [&::first-letter]:leading-[0.82] [&::first-letter]:text-crimson">
             We will tell you what most pitch decks will not: the concept itself is not unique,

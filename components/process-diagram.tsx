@@ -154,7 +154,7 @@ export function ProcessDiagram() {
                   strokeDasharray={n.kind === "fail" ? "4 4" : undefined}
                 />
                 <text x={n.x + 18} y={n.y + 32} fontFamily="var(--font-display)" fontSize="21"
-                      fontWeight="600" fill="var(--color-ink)">
+                      fontWeight="500" fill="var(--color-ink)">
                   {n.title}
                 </text>
                 {n.sub && (

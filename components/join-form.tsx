@@ -119,7 +119,7 @@ export function JoinForm() {
             <circle cx="52" cy="52" r="46" fill="var(--color-crimson)" opacity="0.1" />
             <circle data-seal-ring cx="52" cy="52" r="46" stroke="var(--color-crimson)" strokeWidth="1.5" />
             <text x="52" y="47" textAnchor="middle" fontFamily="var(--font-display)"
-                  fontSize="27" fontWeight="600" fill="var(--color-crimson)">CTL</text>
+                  fontSize="27" fontWeight="500" fill="var(--color-crimson)">CTL</text>
             <text x="52" y="72" textAnchor="middle" fontFamily="var(--font-mono)"
                   fontSize="10" letterSpacing="3" fill="var(--color-crimson)">MMXXVI</text>
           </svg>

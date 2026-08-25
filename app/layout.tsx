@@ -9,18 +9,22 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
+// Only the weights actually used. Shipping 400/500/600 + italic for both
+// Garamonds meant 14 font files and ~297 KB on the wire, which was most of a
+// 3.76s LCP. Display is 500, subheads are 600, emphasis is italic 500.
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["500"],
   style: ["normal", "italic"],
   display: "swap",
 });
 
+// Body is 400; ledes and captions are italic 400. Nothing else is used.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400"],
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -30,7 +34,7 @@ const garamond = EB_Garamond({
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400"],
   display: "swap",
 });
 

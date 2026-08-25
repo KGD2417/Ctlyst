@@ -38,7 +38,12 @@ export function SplitLines({
     });
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const split = new SplitText(node, { type: "lines", mask: "lines", linesClass: "sl-line" });
+      // aria:"none" — SplitText otherwise writes an aria-label onto the wrapper,
+      // and aria-label is prohibited on a generic <div> with no role. We split by
+      // LINE, not character, so the text still reads correctly without it.
+      const split = new SplitText(node, {
+        type: "lines", mask: "lines", linesClass: "sl-line", aria: "none",
+      });
       gsap.set(node, { opacity: 1 });
       const tween = gsap.from(split.lines, {
         yPercent: 110,
@@ -59,7 +64,13 @@ export function SplitLines({
 
   return (
     <div ref={scope} className={misregister ? "misreg" : undefined}>
-      <div ref={el} className={className} style={{ opacity: 0 }}>
+      {/* Rendered VISIBLE. Starting at opacity:0 and waiting for JS made the
+          hero invisible to the Largest Contentful Paint until the reveal ran,
+          so LCP was gated on our own animation — 2.72s, with the LCP element
+          reported as the small gold eyebrow. The hidden start state is now set
+          in a layout effect, which runs before paint, and the preloader covers
+          hydration anyway. */}
+      <div ref={el} className={className}>
         {children}
       </div>
     </div>

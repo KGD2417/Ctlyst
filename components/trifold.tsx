@@ -40,7 +40,7 @@ export function TriFold() {
 
   return (
     <section className="mx-auto max-w-[1180px] px-8 py-24" aria-labelledby="trifold-heading">
-      <p className="t-mono-label text-gold">III. The Tri-Fold Ecosystem</p>
+      <h2 className="t-mono-label text-gold">III. The Tri-Fold Ecosystem</h2>
       <h2 id="trifold-heading" className="t-display-m mt-6">
         Three pillars. One <em className="italic text-crimson">hand-held</em> journey.
       </h2>

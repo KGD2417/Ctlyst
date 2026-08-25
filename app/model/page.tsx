@@ -22,7 +22,7 @@ export default function ModelPage() {
   return (
     <main>
       <div className="mx-auto max-w-[1080px] border-b border-rule px-8 py-20 text-center">
-        <p className="t-mono-label text-gold">The Model</p>
+        <h2 className="t-mono-label text-gold">The Model</h2>
         <h1 className="t-display-l mt-6">
           Not another directory.<br />A <em className="italic text-crimson">done-with-you</em> ecosystem.
         </h1>
@@ -34,7 +34,7 @@ export default function ModelPage() {
 
       {/* I · vision & mission */}
       <section className="mx-auto max-w-[1180px] px-8 py-20">
-        <p className="t-mono-label text-gold">I. Vision &amp; Mission</p>
+        <h2 className="t-mono-label text-gold">I. Vision &amp; Mission</h2>
         <Reveal className="mt-10 grid gap-6 md:grid-cols-2" selector="[data-row]">
           <article data-row className="border border-rule bg-paper-warm p-8">
             <span className="t-mono-label text-gold">Vision</span>
@@ -51,7 +51,7 @@ export default function ModelPage() {
 
       {/* II · how it works */}
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">II. How It Works</p>
+        <h2 className="t-mono-label text-gold">II. How It Works</h2>
         <h2 className="t-display-m mt-6">
           Six steps from <em className="italic text-crimson">stuck</em> to <em className="italic text-crimson">moving.</em>
         </h2>
@@ -60,7 +60,7 @@ export default function ModelPage() {
 
       {/* III · the operating model — §10 corrected */}
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">III. The Operating Model</p>
+        <h2 className="t-mono-label text-gold">III. The Operating Model</h2>
         <h2 className="t-display-m mt-6 max-w-[20ch]">
           Three pipelines in. Two tracks out. <em className="italic text-crimson">One loop.</em>
         </h2>
@@ -69,7 +69,7 @@ export default function ModelPage() {
 
       {/* distinction band */}
       <section data-invert className="my-16 bg-ink px-8 py-24 text-center text-paper">
-        <p className="t-mono-label text-gold">The Distinction</p>
+        <h2 className="t-mono-label text-gold">The Distinction</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Mentorship <em className="italic text-gold">+</em> technical help <em className="italic text-gold">+</em> funding{" "}
           <em className="italic text-gold">+</em> scheme navigation — each exists somewhere.
@@ -79,7 +79,7 @@ export default function ModelPage() {
 
       {/* IV · where we begin */}
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">IV. Where We Begin</p>
+        <h2 className="t-mono-label text-gold">IV. Where We Begin</h2>
         <h2 className="t-display-m mt-6">
           Hyperlocal first. <em className="italic text-crimson">Under-served India</em> next.
         </h2>

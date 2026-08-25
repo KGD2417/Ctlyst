@@ -18,7 +18,7 @@ export default function RoadmapPage() {
   return (
     <main>
       <div className="mx-auto max-w-[1080px] border-b border-rule px-8 py-20 text-center">
-        <p className="t-mono-label text-gold">The Roadmap</p>
+        <h2 className="t-mono-label text-gold">The Roadmap</h2>
         <h1 className="t-display-l mt-6">
           Evidence before <em className="italic text-crimson">expenditure.</em>
         </h1>
@@ -29,12 +29,12 @@ export default function RoadmapPage() {
       </div>
 
       <section className="mx-auto max-w-[900px] px-8 py-20">
-        <p className="t-mono-label text-gold">I. The Road Ahead</p>
+        <h2 className="t-mono-label text-gold">I. The Road Ahead</h2>
         <Timeline />
       </section>
 
       <section data-invert className="my-12 bg-ink px-8 py-24 text-center text-paper">
-        <p className="t-mono-label text-gold">A Sobering Truth We Plan Around</p>
+        <h2 className="t-mono-label text-gold">A Sobering Truth We Plan Around</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Most ventures fail from running out of <em className="italic text-gold">money or patience</em> —
           not from a bad idea. We pace our spending and our promises accordingly.
@@ -42,7 +42,7 @@ export default function RoadmapPage() {
       </section>
 
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">II. Capital Discipline</p>
+        <h2 className="t-mono-label text-gold">II. Capital Discipline</h2>
         <h2 className="t-display-m mt-6">
           Deliberately <em className="italic text-crimson">capital-light.</em>
         </h2>
@@ -74,10 +74,10 @@ export default function RoadmapPage() {
         </div>
       </section>
 
-      <p className="py-6 text-center text-xl text-gold">❦</p>
+      <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
       <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <p className="t-mono-label text-gold">III. Milestones We Hold Ourselves To</p>
+        <h2 className="t-mono-label text-gold">III. Milestones We Hold Ourselves To</h2>
         <Reveal className="mt-10 grid gap-6 md:grid-cols-3" selector="[data-row]" stagger={0.09}>
           {MILESTONES.map((m) => (
             <article key={m.t} data-row className={`border border-rule p-8 ${m.tinted ? "bg-paper-warm" : ""}`}>

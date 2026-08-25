@@ -15,6 +15,13 @@
   --color-crimson:      #7B2D26;
   --color-crimson-deep: #5E211B;
   --color-gold:         #A8874E;
+  /* Small-text variants. The inherited palette (§7) stays exactly as it is for
+     ornament and large type; these darkened hues exist because 11px eyebrows at
+     3.28:1 and 3.97:1 are not legible, and legibility is not a brand decision.
+     Both clear WCAG AA (4.5:1) on --paper AND on --paper-warm — an earlier pair
+     passed only on --paper and still failed inside tinted cards. */
+  --color-gold-ink:     #866C3E;
+  --color-muted-ink:    #766F62;
 
   /* ── families ────────────────────────────────────────────────── */
   --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
@@ -91,10 +98,20 @@ body {
 .t-display-xl { font-family: var(--font-display); font-weight: 500; font-size: clamp(3.25rem, 9vw, 9rem);    line-height: 0.92; letter-spacing: -0.03em; }
 .t-display-l  { font-family: var(--font-display); font-weight: 500; font-size: clamp(2.75rem, 7vw, 6rem);    line-height: 0.96; letter-spacing: -0.025em; }
 .t-display-m  { font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 4.4vw, 3.6rem);   line-height: 1.06; letter-spacing: -0.015em; }
-.t-subhead    { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.35rem, 1.9vw, 1.75rem); line-height: 1.2; letter-spacing: -0.01em; }
+.t-subhead    { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.35rem, 1.9vw, 1.75rem); line-height: 1.2; letter-spacing: -0.01em; }
 .t-lede       { font-family: var(--font-body); font-style: italic; font-size: clamp(1.2rem, 1.6vw, 1.45rem); line-height: 1.55; color: var(--color-ink-soft); }
-.t-caption    { font-family: var(--font-body); font-style: italic; font-size: 0.95rem; line-height: 1.6; color: var(--color-muted); }
+.t-caption    { font-family: var(--font-body); font-style: italic; font-size: 0.95rem; line-height: 1.6; color: var(--label-muted); }
 .t-mono-label { font-family: var(--font-mono); font-weight: 400; font-size: 0.6875rem; line-height: 1; letter-spacing: 0.28em; text-transform: uppercase; }
+/* The darkened tints are for small text ON PAPER. Inside an inverted section
+   the ground is --ink, where the darkened hue is the LOW-contrast one, so the
+   original brand gold is correct there. Blanket-overriding broke exactly that. */
+/* Applied to text wherever it appears, not just to mono labels: the ledger's
+   20px roman numerals were also failing at 3.27:1. Ornamental gold (fleurons,
+   SVG strokes) keeps the raw brand hue — it is not text. */
+.text-gold  { color: var(--label-gold); }
+.text-muted { color: var(--label-muted); }
+:root { --label-gold: var(--color-gold-ink); --label-muted: var(--color-muted-ink); }
+[data-invert] { --label-gold: var(--color-gold); --label-muted: var(--color-rule); }
 .t-mono-data  { font-family: var(--font-mono); font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 
 /* Native cursor hidden only when the custom one is actually running.
