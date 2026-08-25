@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L7 · iteration 1/3 — join (the form)
+Loop: L8 · iteration 1/3 — hardening
 Blocked on: —
 
 ## Gates passed
@@ -20,7 +20,7 @@ Blocked on: —
 - [x] L5b — shader verified 2026-08-25. Evidence: `evidence/L5b-4-095.png`
 - [x] L6 — all four routes verified 2026-08-25. Evidence: `evidence/L6-model-diagram.png`,
       `evidence/L6-why-table.png`, `evidence/L6-schemes-1440.png`, `evidence/L6-roadmap-1440.png`
-- [ ] L7 — join
+- [x] L7 — join verified 2026-08-25. Evidence: `evidence/L7-5-form.png`, `evidence/L7-4-sent.png`
 - [ ] L8 — hardening
 
 ## Assumptions (defaulted, not explicitly approved — reversible, flag if wrong)
@@ -159,6 +159,23 @@ The `/why` candour section is deliberately held plain — no motion beyond a fad
 most persuasive passage on the site precisely because nobody else writes it, and dressing
 it up would undercut that.
 
+## L7 gate record
+| Criterion | Result |
+|---|---|
+| Every field reachable and submittable by keyboard alone (INV-5) | ✓ full run: type → Tab → **Space to pick a role, ArrowDown to change it** → Tab → type → Tab → **Enter sends**. POST 200 |
+| Validation announced, not just coloured | ✓ each error carries `aria-describedby` to a real element, fields carry `aria-invalid`, status region is `aria-live`. Focus jumps to the first problem |
+| Messages explain and do not apologise | ✓ e.g. *"That address is missing an @ or a domain. Check it and try again."*, *"A little more detail helps — 5 more characters at least."* |
+| Reduced motion replaces the seal with a static confirmation | ✓ seal renders at opacity 1 without animating |
+| The form actually posts, both states | ✓ **200 + persisted to JSONL**; forced 500 keeps the form mounted and announces the failure |
+| Server re-validates (never trusts the client) | ✓ a bypassed client posting `{"name":"x","email":"nope","role":"hacker"}` gets **422** with per-field errors |
+| Honeypot | ✓ returns a success shape so a bot learns nothing, and stores nothing |
+
+**Changed the role control from `<select>` to a radio group.** Not cosmetic: no keyboard
+gesture commits a native select value in headless Chromium, so that path was
+*unverifiable* in this harness. Four mutually exclusive options is what radios are for —
+each is individually labelled and announced, arrow keys move natively, and the gate
+became testable instead of assumed.
+
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
 INV-4 ok (mobile nav works, no h-overflow at 390) · INV-5 **ok** (14 focusables, all ringed) ·
@@ -247,3 +264,13 @@ Things that broke and how they were fixed. Do not repeat these.
 - **`window.scrollTo` is inert under Lenis — hit for the third time**, once in a test and
   once in real component code (the gallery focus handler). Any scroll that must actually
   happen goes through `scrollToY`
+- **Calling an animation immediately after `setState` finds a null ref** — the element
+  does not exist until React renders that branch. The wax seal stayed invisible at
+  opacity 0. Animate from an effect keyed on the state, not inline after the setter
+- **Collapsing a form invalidates every ScrollTrigger below it.** The page shortened by
+  several hundred pixels and the six-questions ledger stayed permanently invisible,
+  because `once: true` triggers held stale start/end values. Refresh after any large
+  layout change, not only on route change
+- **Headless Chromium does not commit `<select>` values from synthetic key events** —
+  neither type-ahead, arrows, nor Enter. A keyboard gate on a native select cannot be
+  verified in this harness; radios can
