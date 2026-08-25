@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L3 · iteration 1/3 — preloader
+Loop: L4 · iteration 1/3 — home
 Blocked on: —
 
 ## Gates passed
@@ -12,7 +12,8 @@ Blocked on: —
       `evidence/L2-3-mobilenav-390.png`, `evidence/L2-2-home-1440.png`
 - [x] L2b — atmosphere verified 2026-08-25. Evidence: `evidence/L2b-5-empty-1440.png`,
       `evidence/L2b-5-empty-390.png`, `evidence/L2b-4-home-1440.png`
-- [ ] L3 — preloader
+- [x] L3 — preloader verified 2026-08-25. Evidence: `evidence/L3-1-preload-mid.png`,
+      `evidence/L3-2-nav-1440.png`
 - [ ] L4 — home
 - [ ] L5 — the Gap
 - [ ] L6 — remaining routes
@@ -74,6 +75,20 @@ Font payload will need subsetting before L8.
 | 60s without visible loop / re-sync | ✓ **64s observed**: no shape returned to its start, no two ever in lockstep. Durations 47/61/73s (prime), yoyo, so the true period is 2× and the set cannot realign |
 | Mobile cap (§9.5) | ✓ exactly 2 shapes at 390px |
 | INV-1 with atmosphere | ✓ 30 navigations: 3 tweens, 3 drift groups, 4 ticker listeners — all flat |
+
+## L3 gate record
+| Criterion | Result |
+|---|---|
+| Gated on `document.fonts.ready` | ✓ raced against an 800ms timeout so slow fonts cannot hold the page either |
+| Hard cap 2.2s | ✓ completes at **1817ms**; timeline forced to `progress(1)` at 2200ms, absolute backstop at 3100ms |
+| Flip lands pixel-accurate, both breakpoints | ✓ **1440: dx 0.0, dy 0.4, dw 0.3, dh 0.1 px · 390: dx 0.0, dy 0.5 px** |
+| Skipped under reduced motion | ✓ preloader never mounts; page settled in 334ms |
+
+**Design correction found by looking:** the preloader drew a stroked SVG monogram while
+the navbar was Cormorant text, so the Flip was landing one artwork on top of a different
+one — a swap disguised as a transform. Both now render the same `<Monogram/>`, so the
+mark genuinely *becomes* the logo. Interpuncts also moved from the baseline to mid
+cap-height, where an interpunct belongs.
 
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·

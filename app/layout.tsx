@@ -4,6 +4,7 @@ import { ScrollProvider } from "@/lib/scroll-provider";
 import { CurtainProvider } from "@/lib/curtain";
 import { CustomCursor } from "@/lib/cursor";
 import { Atmosphere } from "@/lib/atmosphere";
+import { Preloader } from "@/lib/preloader";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <ScrollProvider>
           <CurtainProvider>
+            <Preloader />
             <Atmosphere />
             <SiteNav />
             {children}

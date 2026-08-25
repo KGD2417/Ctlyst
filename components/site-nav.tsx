@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CurtainLink } from "@/lib/curtain";
 import { ROUTES } from "@/lib/routes";
+import { Monogram } from "@/lib/monogram";
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -40,10 +41,11 @@ export function SiteNav() {
       <nav className="mx-auto flex max-w-[1180px] items-center justify-between px-8 py-4">
         <CurtainLink
           href="/"
-          className="font-display text-2xl uppercase tracking-[0.14em] text-ink"
+          data-navmark
+          className="block text-ink"
           aria-label="CTLYST — home"
         >
-          CTL<span className="text-crimson">Y</span>ST
+          <Monogram className="h-7 w-auto" strokeWidth={7} />
         </CurtainLink>
 
         {/* desktop */}
