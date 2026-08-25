@@ -311,6 +311,54 @@ the tab order. Verified unclipped at 1440, 1280 and 1024.
 | ESLint | ✓ clean |
 | Cursor + parallax | ✓ cursor scales 1.00 → 2.60; parallax −13.5 → −575px |
 
+## Revision 2 — tri-fold stutter, and The Gap's resolution
+
+### Tri-fold: three compounding bugs
+Reported as "lags like crazy, animation gets cut off". All three were real:
+
+1. **Every hover started a new Flip without killing the previous one.** Sweeping across
+   three cards left three overlapping tweens, each measuring a half-animated layout —
+   that is the "cut off" look.
+2. **`Flip.getState()` → `setState()` → `requestAnimationFrame()` was a guess.** React had
+   not necessarily committed by that frame, so Flip sometimes measured the *old* layout and
+   jumped. State is now captured in the handler and replayed in `useLayoutEffect`, which
+   runs after commit and before paint.
+3. **The real visual problem was the text, not the box.** Changing column widths re-wrapped
+   the paragraph inside, and no layout animation can smooth reflowing text. The copy is now
+   pinned to the compressed column width so it never re-wraps in any state, and the space
+   the expansion frees reveals a detail line instead of sitting as dead air.
+
+Verified with a **real pointer** sweep at 4× CPU throttle, moving faster (150ms) than the
+tween (500ms): widths **285 / 498 / 285**, **0 dropped frames, 0 stutters**, and the
+paragraph holds **6 lines in both states** — no reflow.
+
+*A dispatched `mouseenter` does not fire React's `onMouseEnter`* (React synthesises it from
+`mouseover` delegation), so the first version of this test reported a flat 60fps while
+never actually triggering the animation. Real pointer movement is the only valid test.
+
+### The Gap now resolves into the drawn monogram
+Was a plain crossfade. Now: the words meet, the seam wets, each word **folds into the join
+from the inside out** — the letters nearest the ink dissolve first — and the CTL·Y·ST
+monogram **draws itself out of the bleed**, stroke by stroke, each opening from its own
+centre. It is the same mark the preloader draws at load, so the entrance and the signature
+close a loop.
+
+Timeline positions here are **seconds, not fractions of the scrub** (~1.15s total), which
+is why the first tuning had a stroke appearing while letters were still on the paper.
+Verified: at 0.62 two letters remain and the mark has not started; by 0.70 the paper is
+clear and it is drawing.
+
+### Verification after both changes
+| Check | Result |
+|---|---|
+| Tri-fold under real pointer, 4× CPU | ✓ 0 dropped, 0 stutters, no text reflow |
+| The Gap scroll-through, 4× CPU | ✓ 0 dropped frames |
+| INV-6 | ✓ worst **225.1 KB** of 250 |
+| INV-1 churn | ✓ 4 rounds × 6 routes: split chars 14, pillars 3 — flat |
+| INV-2 reduced motion | ✓ 7 routes, 0 hidden; the Gap shows the **finished** mark, words hidden |
+| INV-4 mobile | ✓ no horizontal overflow on any route |
+| Errors / ESLint | ✓ zero |
+
 ## Invariant status
 **All eight verified at L8** — see the table above.
 INV-1 ok · INV-2 ok · INV-3 ok · INV-4 ok · INV-5 ok · INV-6 ok (202.4/250 KB) ·

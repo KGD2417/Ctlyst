@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { Monogram } from "@/lib/monogram";
 import { useGsapContext } from "@/lib/use-gsap";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin);
 
 /**
  * The Gap — the one memorable thing on the site (L5).
@@ -61,6 +64,17 @@ export function TheGap() {
       const right = q<HTMLElement>("[data-word='execution']")[0];
       const resolve = q<HTMLElement>("[data-resolve]")[0];
       const seam = q<HTMLElement>("[data-seam]")[0];
+      const strokes = q<SVGPathElement>("[data-resolve] [data-stroke]");
+      const dots = q<SVGCircleElement>("[data-resolve] [data-dot]");
+
+      // Characters, so the words can collapse INTO the seam rather than simply
+      // fading out on top of each other. Split late — after the words have been
+      // laid out — and reverted with the context.
+      const splitL = new SplitText(left, { type: "chars", aria: "none" });
+      const splitR = new SplitText(right, { type: "chars", aria: "none" });
+      // outermost characters lead, so each word folds inward toward the join
+      const collapseL = [...splitL.chars].reverse();
+      const collapseR = [...splitR.chars];
 
       // Travel is MEASURED, not a guessed percentage: the void between the two
       // words depends on viewport width and on how wide each word renders, so a
@@ -114,16 +128,41 @@ export function TheGap() {
       // fade-out and fade-in left "ideasexecution" legible as one collided word
       // with CTLYST ghosting behind it. The words now clear the seam before the
       // wordmark arrives, so the bleed reads as ink soaking in, not a crossfade.
-      tl.fromTo(left,  { x: 0 }, { x: () => travelL, ease: "none", duration: 0.72 }, 0)
-        .fromTo(right, { x: 0 }, { x: () => travelR, ease: "none", duration: 0.72 }, 0)
-        .fromTo(seam,  { opacity: 0 }, { opacity: 1, ease: "none", duration: 0.34 }, 0.58)
-        .to([left, right], { opacity: 0, ease: "none", duration: 0.12 }, 0.72)
-        .fromTo(resolve, { opacity: 0 }, { opacity: 1, ease: "none", duration: 0.16 }, 0.84);
+      // Sequence: meet → wet → fold away → the mark draws out of the ink.
+      // The words must have CLEARED before the monogram starts, or the two read
+      // as overlapping rather than as one becoming the other.
+      tl.fromTo(left,  { x: 0 }, { x: () => travelL, ease: "none", duration: 0.58 }, 0)
+        .fromTo(right, { x: 0 }, { x: () => travelR, ease: "none", duration: 0.58 }, 0)
+        // the seam wets as they arrive
+        .fromTo(seam, { opacity: 0 }, { opacity: 1, ease: "none", duration: 0.26 }, 0.46)
+        // ...then each word folds into the join, outermost letters leading
+        .to(collapseL, {
+          x: (i, t: Element) => -(t as HTMLElement).offsetLeft * 0.05 + 22,
+          opacity: 0, ease: "power2.in", duration: 0.14, stagger: 0.012,
+        }, 0.58)
+        .to(collapseR, {
+          x: (i, t: Element) => (t as HTMLElement).offsetLeft * 0.05 - 22,
+          opacity: 0, ease: "power2.in", duration: 0.14, stagger: 0.012,
+        }, 0.58)
+        // ...and the wordmark draws itself out of the ink, stroke by stroke —
+        // the same mark the preloader draws at load. Each stroke opens from its
+        // own centre outward, so the letters grow rather than being wiped in.
+        // NOTE: timeline positions are seconds, not fractions of the scrub. The
+        // timeline runs ~1.15s total, so these land at roughly 0.72–1.0 of the
+        // scroll. Nudged later than first written because a stroke was appearing
+        // while the last letters were still on the paper.
+        .set(resolve, { opacity: 1 }, 0.82)
+        .fromTo(strokes, { drawSVG: "50% 50%" },
+          { drawSVG: "0% 100%", ease: "power2.out", duration: 0.28, stagger: 0.038 }, 0.82)
+        .fromTo(dots, { scale: 0, transformOrigin: "50% 50%" },
+          { scale: 1, ease: "power3.out", duration: 0.12, stagger: 0.05 }, 1.02);
     });
 
     // ── reduced motion / mobile handled in markup; nothing to animate ─────
     mm.add("(prefers-reduced-motion: reduce)", () => {
       gsap.set(q("[data-resolve]"), { opacity: 1 });
+      gsap.set(q("[data-resolve] [data-stroke]"), { drawSVG: "100%" });
+      gsap.set(q("[data-resolve] [data-dot]"), { scale: 1, transformOrigin: "50% 50%" });
       gsap.set(q("[data-word]"), { opacity: 0 });
     });
   }, []);
@@ -170,9 +209,10 @@ export function TheGap() {
 
           <span
             data-resolve
-            className="t-display-xl pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-crimson opacity-0"
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[min(52vw,660px)] -translate-x-1/2 -translate-y-1/2 text-crimson opacity-0"
           >
-            CTLYST
+            <Monogram className="w-full overflow-visible" strokeWidth={5} drawable />
           </span>
         </div>
       </section>
