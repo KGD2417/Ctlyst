@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════
+   CTLYST — brand tokens (§7, inherited) + motion tokens (PLAN §3)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── palette · inherited, do not redesign ────────────────────── */
+  --color-paper:        #FDFCF9;
+  --color-paper-warm:   #F7F4EC;
+  --color-ink:          #1A1712;
+  --color-ink-soft:     #4A443A;
+  --color-muted:        #857D6E;
+  --color-rule:         #DCD6C8;
+  --color-crimson:      #7B2D26;
+  --color-crimson-deep: #5E211B;
+  --color-gold:         #A8874E;
+
+  /* ── families ────────────────────────────────────────────────── */
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-body:    var(--font-garamond), Georgia, "Times New Roman", serif;
+  --font-mono:    var(--font-plex-mono), ui-monospace, monospace;
+}
+
+:root {
+  /* ── durations ───────────────────────────────────────────────── */
+  --dur-instant: 0.12s;
+  --dur-quick:   0.28s;
+  --dur-base:    0.56s;
+  --dur-slow:    0.9s;
+  --dur-grave:   1.4s;
+
+  /* ── fixed sequences ─────────────────────────────────────────── */
+  --curtain-total: 0.68s;
+  --preload-cap:   2.2s;
+  --seal:          0.78s;
+
+  /* ── eases · INV-7 bans all overshooting curves — see BRIEF §2 ─── */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── staggers ────────────────────────────────────────────────── */
+  --stagger-line: 0.06s;
+  --stagger-card: 0.09s;
+  --stagger-row:  0.07s;
+
+  /* ── ambient drift · all prime, so the set never re-syncs ─────── */
+  --drift-a: 47s;
+  --drift-b: 61s;
+  --drift-c: 73s;
+  --drift-d: 89s;
+
+  /* ── parallax + pointer (§9.3) ───────────────────────────────── */
+  --par-fibre:     0.05;
+  --par-guilloche: 0.15;
+  --pointer-lerp:  0.02;
+  --pointer-cap:   24px;
+
+  /* ── layer C weight · PLAN §4.1 amendment to §9.2 ─────────────── */
+  --guilloche-stroke:  1.25px;
+  --guilloche-opacity: 0.5;
+
+  /* ── misregistration (§9.6) · two uses across the whole site ──── */
+  --misreg: 3px;
+}
+
+html {
+  /* Lenis is the only scroll authority — never smooth-scroll in CSS too */
+  scroll-behavior: auto;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "onum" 1, "liga" 1;
+}
+
+::selection { background: var(--color-crimson); color: var(--color-paper); }
+
+/* INV-5 — focus must stay visible through every later loop */
+:focus-visible {
+  outline: 2px solid var(--color-crimson);
+  outline-offset: 3px;
+}
+
+/* ── type ramp (PLAN §1) ───────────────────────────────────────── */
+.t-display-xl { font-family: var(--font-display); font-weight: 500; font-size: clamp(3.25rem, 9vw, 9rem);    line-height: 0.92; letter-spacing: -0.03em; }
+.t-display-l  { font-family: var(--font-display); font-weight: 500; font-size: clamp(2.75rem, 7vw, 6rem);    line-height: 0.96; letter-spacing: -0.025em; }
+.t-display-m  { font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 4.4vw, 3.6rem);   line-height: 1.06; letter-spacing: -0.015em; }
+.t-subhead    { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.35rem, 1.9vw, 1.75rem); line-height: 1.2; letter-spacing: -0.01em; }
+.t-lede       { font-family: var(--font-body); font-style: italic; font-size: clamp(1.2rem, 1.6vw, 1.45rem); line-height: 1.55; color: var(--color-ink-soft); }
+.t-caption    { font-family: var(--font-body); font-style: italic; font-size: 0.95rem; line-height: 1.6; color: var(--color-muted); }
+.t-mono-label { font-family: var(--font-mono); font-weight: 400; font-size: 0.6875rem; line-height: 1; letter-spacing: 0.28em; text-transform: uppercase; }
+.t-mono-data  { font-family: var(--font-mono); font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }

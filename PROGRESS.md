@@ -1,12 +1,13 @@
 # PROGRESS
 
 ## Current
-Loop: L1 · iteration 1/3 — plumbing harness
+Loop: L2 · iteration 1/3 — shell
 Blocked on: —
 
 ## Gates passed
 - [x] L0 — plan approved 2026-08-25 ("continue"); three questions defaulted, see Assumptions
-- [ ] L1 — plumbing harness
+- [x] L1 — harness verified 2026-08-25. Evidence: `evidence/L1-1-harness-1440.png`,
+      `evidence/L1-1-harness-390.png`; measurements in the L1 gate record below
 - [ ] L2 — shell
 - [ ] L2b — atmosphere
 - [ ] L3 — preloader
@@ -23,9 +24,27 @@ Blocked on: —
 - `/join` posts to a Next route handler with server-side re-validation + JSONL append;
   a single documented seam is left for a real inbox provider
 
+## L1 gate record
+| Criterion | Result |
+|---|---|
+| Inertial scroll | ✓ one wheel tick → 12 decelerating frames (130, 92, 84, 91, 78, 67, 64, 57, 46, 51, 40, 39 px) |
+| ScrollTrigger in sync at speed | ✓ 40 rapid wheel ticks; **max drift 0.0000** across all 10 in-range frames |
+| Reduced-motion live toggle | ✓ 3 triggers → 1 (fade only), Lenis destroyed, scrub set to final state — **without reload** |
+| Route churn ×5 (INV-1) | ✓ 3 → 0 → 3, stable. Drops to **0** when away, so revert genuinely kills |
+| `next build` | ✓ compiled, zero type errors |
+
+**INV-6 baseline: 186.6 KB gzipped first-load JS (budget 250 KB); fonts a further 184.8 KB.**
+Measured via `PerformanceResourceTiming.encodedBodySize` against `next start` — Next 16
+dropped First Load JS from the build table and Turbopack's manifest has no per-route
+chunk list, so the browser's own number is the ground truth.
+**Only ~63 KB of headroom remains** for atmosphere, preloader, SplitText/Flip/DrawSVG,
+`motion`, and six routes. WebGL is dynamically imported so it stays out of first load.
+Font payload will need subsetting before L8.
+
 ## Invariant status
-INV-1 n/a · INV-2 n/a · INV-3 n/a · INV-4 n/a · INV-5 n/a · INV-6 n/a · INV-7 n/a · INV-8 ok (plan §8)
-Nothing is built yet; all statuses are n/a rather than ok.
+INV-1 **ok** (measured) · INV-2 **ok** (measured, live) · INV-3 ok (grep clean) ·
+INV-4 ok (no pin, no h-overflow at 390) · INV-5 ok (focus ring set; real audit at L8) ·
+INV-6 **at risk — 186.6/250 KB used at L1** · INV-7 ok (grep clean) · INV-8 n/a (no brand copy yet)
 
 ## Decisions
 - **Mono face: IBM Plex Mono** — the only candidate of four with a ₹ glyph at correct
@@ -54,3 +73,16 @@ Things that broke and how they were fixed. Do not repeat these.
 - **playwright MCP blocks `file://`** and its first launch times out at 180s if the
   chrome profile is stale. Fix: `rm -rf ~/Library/Caches/ms-playwright-mcp/mcp-chrome-*`,
   and serve over localhost
+- **Next 16 dev blocks `127.0.0.1` as cross-origin** and 403s every `_next` chunk with a
+  near-useless client-side error. Use `http://localhost:<port>`, not the IP. No config change needed
+- **`window.scrollTo` is inert while Lenis owns the scroll**, so a sync test built on it
+  reads 0 for both measured and expected and reports a meaningless drift of 0. Drive
+  scroll with real wheel events or `lenis.scrollTo`, and always assert the trigger
+  actually entered its range before trusting a drift number
+- **Next 16 + Turbopack has no per-route chunk list** in `build-manifest.json` and no
+  longer prints First Load JS. Measure INV-6 from the browser's
+  `PerformanceResourceTiming.encodedBodySize` instead of parsing manifests
+- **An INV-7 grep hits its own explanatory comment.** Never write the banned words in a
+  comment or every future gate reports a false positive
+- Playwright MCP's `run_code_unsafe` sandbox has **no `require`, `import`, or `URL`** —
+  do byte accounting inside `page.evaluate` with the Performance API instead
