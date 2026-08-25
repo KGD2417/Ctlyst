@@ -55,13 +55,13 @@ Font payload will need subsetting before L8.
 | Focus ring (INV-5) | ✓ 14 focusables, all with 2px solid crimson, all on screen |
 | INV-1 with full shell | ✓ 30 navigations (5 rounds × 6 routes): triggers 0, tweens 1, ticker listeners 3 — all flat |
 
-**INV-6: 201.2 KB gzipped (was 186.6 at L1). Headroom 48.8 KB.**
-`motion` + shell cost 14.6 KB. Still to come: SplitText, DrawSVG, Flip, six route bodies.
-**Identified lever if this gets tight:** `motion` costs ~14.6 KB to animate one crimson
-rectangle that GSAP — already in the bundle — would animate for free. BRIEF §11 lists
-`motion` explicitly, so I have not removed it unilaterally, but its own stated rationale
-("two libraries doing one job is how these builds bloat") argues for cutting it. Flagged,
-not actioned.
+**INV-6: 180.7 KB gzipped. Headroom 69.3 KB.**
+`motion` was **removed on user instruction** and the curtain rewritten on GSAP
+(`yPercent`, `power3.out`). Saved 20.5 KB — more than the 14.6 estimated, because
+`motion` pulled React glue with it. L2 gate re-run after the swap and still passes:
+8 navigations, 609–642 ms, all landed, all scroll-reset, no flash.
+**Deviation from BRIEF §11**, which lists `motion` as a dependency. Its own rationale
+("two libraries doing one job is how these builds bloat") supports the removal.
 
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
@@ -80,6 +80,10 @@ calls pin `type:"tween"`) · INV-8 ok (all route copy traces to `reference/CTLYS
 - Observation runs against `python3 -m http.server 4599`; playwright's profile blocks `file://`
 - chrome-devtools MCP is **not connected** despite `CLAUDE.md`; L2b and L8 gates need a
   substitute measurement or an install. Not yet resolved
+
+- **`motion` dropped (user instruction).** Curtain now runs on GSAP `yPercent` with
+  `power3.out`. CustomEase would reproduce the exact brand cubic-bezier but costs ~3 KB,
+  a fifth of the saving; PLAN §3 already sanctions `power3.out` as a brand ease
 
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
