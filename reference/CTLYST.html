@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CTLYST — Bridging the Gap Between Ideas and Execution</title>
+<meta name="description" content="CTLYST connects student and early-stage founders with experienced mentors, hands-on help, and India's under-used funding schemes — in one hand-held journey." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   CTLYST — classic editorial design system (single-file edition)
+   White ground · Roman serif · ink & crimson · engraved-page aesthetic
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --paper: #FDFCF9;
+  --paper-warm: #F7F4EC;
+  --ink: #1A1712;
+  --ink-soft: #4A443A;
+  --muted: #857D6E;
+  --rule: #DCD6C8;
+  --crimson: #7B2D26;
+  --crimson-deep: #5E211B;
+  --gold: #A8874E;
+  --serif: 'Cormorant Garamond', 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --body: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "onum" 1, "liga" 1;
+}
+
+::selection { background: var(--crimson); color: var(--paper); }
+
+img { max-width: 100%; }
+
+a { color: var(--crimson); text-decoration: none; }
+a:hover { color: var(--crimson-deep); }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 2rem; }
+.wrap--narrow { max-width: 780px; }
+
+/* ── Single-file page switching ─────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; animation: pagefade 0.5s var(--ease); }
+@keyframes pagefade {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Top bar & navigation ───────────────────────────────────────────── */
+.topline {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.55rem 0;
+  text-align: center;
+  font-size: 0.82rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper);
+}
+
+header.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(253, 252, 249, 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 2rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.brand {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.65rem;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.brand em { color: var(--crimson); font-style: normal; }
+.brand:hover { color: var(--ink); }
+
+.nav-links { display: flex; gap: 2.2rem; list-style: none; align-items: center; }
+
+.nav-links a {
+  font-size: 0.92rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s, border-color 0.3s;
+}
+.nav-links a:hover { color: var(--crimson); }
+.nav-links a.active { color: var(--crimson); border-bottom-color: var(--crimson); }
+
+.nav-cta {
+  border: 1px solid var(--ink) !important;
+  padding: 0.55rem 1.4rem !important;
+  color: var(--ink) !important;
+  transition: background 0.35s var(--ease), color 0.35s !important;
+}
+.nav-cta:hover { background: var(--ink); color: var(--paper) !important; }
+
+.burger {
+  display: none;
+  background: none;
+  border: 1px solid var(--rule);
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+}
+.burger span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: var(--ink);
+  margin: 5px 0;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; }
+.burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ── Hero ───────────────────────────────────────────────────────────── */
+.hero {
+  padding: 6.5rem 0 5rem;
+  text-align: center;
+  position: relative;
+}
+
+.hero-kicker {
+  font-size: 0.9rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 2.2rem;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+}
+.hero h1 em { font-style: italic; color: var(--crimson); }
+
+.hero-sub {
+  max-width: 620px;
+  margin: 2.4rem auto 0;
+  font-size: 1.28rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.hero-actions {
+  margin-top: 3rem;
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  font-family: var(--body);
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 0.95rem 2.4rem;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.35s var(--ease), color 0.35s, border-color 0.35s;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+
+.btn--solid { background: var(--crimson); border-color: var(--crimson); color: var(--paper); }
+.btn--solid:hover { background: var(--crimson-deep); border-color: var(--crimson-deep); color: var(--paper); }
+
+/* ── Ornaments & rules ──────────────────────────────────────────────── */
+.fleuron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  color: var(--gold);
+  font-size: 1.35rem;
+  line-height: 1;
+  margin: 0 auto;
+  padding: 1.6rem 0;
+  max-width: 320px;
+}
+.fleuron::before,
+.fleuron::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────── */
+section { padding: 4rem 0; }
+section.band { padding: 5.5rem 0; }
+
+.sect-label {
+  display: flex;
+  align-items: baseline;
+  gap: 1.4rem;
+  margin-bottom: 2.8rem;
+}
+.sect-label .numeral {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+.sect-label .title {
+  font-size: 0.92rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sect-label::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--rule);
+  transform: translateY(-4px);
+}
+
+h2.display {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.1rem, 4.5vw, 3.3rem);
+  line-height: 1.15;
+  max-width: 780px;
+  margin-bottom: 1.6rem;
+}
+h2.display em { font-style: italic; color: var(--crimson); }
+
+.lede {
+  font-size: 1.3rem;
+  color: var(--ink-soft);
+  max-width: 700px;
+}
+
+.dropcap::first-letter {
+  font-family: var(--serif);
+  float: left;
+  font-size: 4.6rem;
+  line-height: 0.82;
+  padding: 0.08em 0.12em 0 0;
+  color: var(--crimson);
+  font-weight: 500;
+}
+
+/* ── Stats ──────────────────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.stat {
+  padding: 2.8rem 1rem;
+  text-align: center;
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stat:last-child { border-right: none; }
+
+.stat .num {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 2.6vw, 2.7rem);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+  white-space: nowrap;
+}
+.stat .num sup { font-size: 0.45em; color: var(--crimson); }
+.stat .label {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  max-width: 200px;
+}
+
+/* ── Pull quotes ────────────────────────────────────────────────────── */
+.pullquote {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 1rem 2rem;
+}
+.pullquote .mark {
+  font-family: var(--serif);
+  font-size: 4rem;
+  color: var(--gold);
+  line-height: 1;
+  height: 2.6rem;
+  overflow: hidden;
+  display: block;
+  margin-bottom: 1rem;
+}
+.pullquote blockquote {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.pullquote cite {
+  display: block;
+  margin-top: 1.8rem;
+  font-style: normal;
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pullquote cite::before { content: "— "; color: var(--crimson); }
+
+/* ── Cards & grids ──────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+
+.card {
+  border: 1px solid var(--rule);
+  padding: 2.4rem 2.1rem;
+  background: var(--paper);
+  transition: border-color 0.4s var(--ease), transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  position: relative;
+}
+.card:hover {
+  border-color: var(--crimson);
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px -22px rgba(26, 23, 18, 0.25);
+}
+
+.card .card-numeral {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  display: block;
+  margin-bottom: 1.1rem;
+}
+
+.card h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.55rem;
+  margin-bottom: 0.9rem;
+  line-height: 1.25;
+}
+
+.card p { color: var(--ink-soft); font-size: 1.05rem; }
+
+.card--tinted { background: var(--paper-warm); }
+
+/* ── Ledger rows ────────────────────────────────────────────────────── */
+.ledger { border-top: 1px solid var(--ink); }
+.ledger-row {
+  display: grid;
+  grid-template-columns: 90px 300px 1fr;
+  gap: 2rem;
+  padding: 2.2rem 0.5rem;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+  transition: background 0.35s, padding-left 0.35s var(--ease);
+}
+.ledger-row:hover { background: var(--paper-warm); padding-left: 1.2rem; }
+.ledger-row .roman {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--gold);
+}
+.ledger-row h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+.ledger-row p { color: var(--ink-soft); font-size: 1.05rem; }
+
+/* ── Tables ─────────────────────────────────────────────────────────── */
+.table-scroll { overflow-x: auto; }
+
+table.classic {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.02rem;
+}
+table.classic caption {
+  caption-side: bottom;
+  padding-top: 1rem;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--muted);
+  text-align: left;
+}
+table.classic th {
+  font-family: var(--body);
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.9rem 1.1rem;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink);
+  white-space: nowrap;
+}
+table.classic td {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  color: var(--ink-soft);
+}
+table.classic tr:hover td { background: var(--paper-warm); }
+table.classic td strong { color: var(--ink); font-weight: 600; }
+table.classic .yes { color: var(--crimson); font-weight: 600; }
+
+/* ── Timeline ───────────────────────────────────────────────────────── */
+.timeline { position: relative; padding-left: 2.4rem; }
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--rule);
+}
+.tl-item { position: relative; padding-bottom: 3rem; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: -2.4rem;
+  top: 0.5rem;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--crimson);
+  border-radius: 50%;
+  background: var(--paper);
+}
+.tl-item:hover::before { background: var(--crimson); }
+.tl-item .tl-when {
+  font-size: 0.85rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+.tl-item h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.6rem;
+  margin-bottom: 0.6rem;
+}
+.tl-item p { color: var(--ink-soft); max-width: 640px; }
+
+/* ── Callout band ───────────────────────────────────────────────────── */
+.band {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 5.5rem 0;
+  margin: 4rem 0;
+  text-align: center;
+}
+.band h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+  line-height: 1.4;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.band h2 em { color: var(--gold); font-style: italic; }
+.band .band-kicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 2.2rem;
+  padding-bottom: 1.4rem;
+  position: relative;
+}
+.band .band-kicker::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  border-top: 1px solid var(--gold);
+}
+.band .btn { border-color: var(--paper); color: var(--paper); margin-top: 2.6rem; }
+.band .btn:hover { background: var(--paper); color: var(--ink); }
+
+/* ── Forms ──────────────────────────────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+.form-grid .full { grid-column: 1 / -1; }
+
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.55rem;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  font-family: var(--body);
+  font-size: 1.1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 0.85rem 1rem;
+  transition: border-color 0.3s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--crimson);
+}
+.field textarea { resize: vertical; min-height: 150px; }
+
+.hp-wrap { position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+.form-note {
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 1rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.75;
+}
+
+.stats + .form-note { margin-top: 1.6rem; }
+
+.form-status {
+  margin-top: 1.4rem;
+  font-size: 1.05rem;
+  min-height: 1.6rem;
+}
+.form-status.ok { color: #2E5E31; }
+.form-status.err { color: var(--crimson); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+footer.site-foot {
+  border-top: 1px solid var(--ink);
+  margin-top: 3rem;
+  padding: 3.5rem 0 2.5rem;
+  text-align: center;
+}
+.foot-brand {
+  font-family: var(--serif);
+  font-size: 2rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-left: 0.3em;
+}
+.foot-motto {
+  font-style: italic;
+  color: var(--muted);
+  margin-top: 0.7rem;
+}
+.foot-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.8rem;
+  flex-wrap: wrap;
+  margin-top: 1.8rem;
+  list-style: none;
+}
+.foot-links a {
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.foot-links a:hover { color: var(--crimson); }
+.foot-fine {
+  margin-top: 2.2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ── Reveal animations ──────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+.reveal.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .page.active { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ── Page header (inner pages) ──────────────────────────────────────── */
+.page-head {
+  padding: 5rem 0 3.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--rule);
+}
+.page-head .crumb {
+  font-size: 0.85rem;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.6rem;
+}
+.page-head h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  line-height: 1.1;
+}
+.page-head h1 em { font-style: italic; color: var(--crimson); }
+.page-head .page-sub {
+  max-width: 640px;
+  margin: 1.8rem auto 0;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--ink-soft);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2n) { border-right: none; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .ledger-row { grid-template-columns: 60px 1fr; }
+  .ledger-row p { grid-column: 2; }
+}
+
+@media (max-width: 760px) {
+  .nav-links {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    background: var(--paper);
+    flex-direction: column;
+    justify-content: center;
+    gap: 2.4rem;
+    transform: translateX(100%);
+    transition: transform 0.45s var(--ease);
+    z-index: 90;
+  }
+  .nav-links.open { transform: none; }
+  .nav-links a { font-size: 1.15rem; }
+  .burger { display: block; position: relative; z-index: 95; }
+  .form-grid { grid-template-columns: 1fr; }
+  body { font-size: 1.08rem; }
+  section { padding: 3.2rem 0; }
+}
+
+@media (max-width: 520px) {
+  .stats { grid-template-columns: 1fr; }
+  .stat { border-right: none; border-bottom: 1px solid var(--rule); }
+  .stat:last-child { border-bottom: none; }
+  .wrap { padding: 0 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="topline">Mumbai · Maharashtra · Est. MMXXVI</div>
+
+<header class="site-head">
+  <nav class="nav">
+    <a class="brand" href="#home">CTL<em>Y</em>ST</a>
+    <button class="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#model">The Model</a></li>
+      <li><a href="#why">Why Us</a></li>
+      <li><a href="#schemes">Schemes</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a class="nav-cta" href="#join">Join Us</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ════════════════════════════ HOME ════════════════════════════ -->
+<main class="page" id="page-home">
+
+  <section class="hero wrap">
+    <p class="hero-kicker reveal">Bridging the gap between ideas and execution</p>
+    <h1 class="reveal">No good idea should fail<br />for want of <em>guidance.</em></h1>
+    <p class="hero-sub reveal">CTLYST unites experienced mentors, hands-on technical help, and India's
+      under-used funding schemes into one hand-held journey — for the student founder
+      the system was never built to find.</p>
+    <div class="hero-actions reveal">
+      <a class="btn btn--solid" href="#join">Begin Your Journey</a>
+      <a class="btn" href="#model">Read the Model</a>
+    </div>
+  </section>
+
+  <p class="fleuron">❦</p>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">The Ecosystem in Numbers</span></div>
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="num"><span data-count="1.98">0</span> lakh<sup>+</sup></div>
+        <div class="label">DPIIT-recognised startups</div>
+      </div>
+      <div class="stat">
+        <div class="num"><span data-count="21">0</span> lakh<sup>+</sup></div>
+        <div class="label">Direct jobs created</div>
+      </div>
+      <div class="stat">
+        <div class="num"><span data-count="34">0</span>,000<sup>+</sup></div>
+        <div class="label">Startups in Maharashtra alone</div>
+      </div>
+      <div class="stat">
+        <div class="num"><span data-count="48">0</span>%</div>
+        <div class="label">With a woman director</div>
+      </div>
+    </div>
+    <p class="form-note reveal" style="text-align:center;">Source: DPIIT / Press Information Bureau, October–November 2025. India is now the world's third-largest startup ecosystem — averaging one newly recognised startup <em>every hour</em> for a decade.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>Dream is not that which you see while sleeping; it is something that does not let you sleep.</blockquote>
+      <cite>Dr. A. P. J. Abdul Kalam</cite>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">The Four Walls</span></div>
+    <h2 class="display reveal">Talented founders stall — not for lack of merit, but at four <em>practical walls.</em></h2>
+    <div class="ledger reveal">
+      <div class="ledger-row">
+        <span class="roman">i.</span>
+        <h3>The Guidance Gap</h3>
+        <p>Little or no access to people who have actually built and operated ventures — especially outside the major metros, where networks are thin.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">ii.</span>
+        <h3>The Capability Gap</h3>
+        <p>Missing technical, product, or operational skills to move from a promising idea to a working prototype.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iii.</span>
+        <h3>The Awareness Gap</h3>
+        <p>Limited knowledge of the incubators, grants, subsidies, and government schemes that already exist — funded, waiting, and under-used.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iv.</span>
+        <h3>The Trust Gap</h3>
+        <p>Even where resources exist, founders cannot easily tell which are credible or how to navigate the process alone.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="band-kicker reveal">The CTLYST Insight</p>
+      <h2 class="reveal">The resources India's founders need <em>already exist.</em><br />
+        What is missing is the one trusted place that connects the right resource
+        to the right founder — <em>at the right time.</em></h2>
+      <a class="btn reveal" href="#why">Why We Are That Place</a>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">III.</span><span class="title">The Tri-Fold Ecosystem</span></div>
+    <h2 class="display reveal">Three pillars. One <em>hand-held</em> journey.</h2>
+    <div class="grid-3" style="margin-top:2.5rem;">
+      <div class="card reveal">
+        <span class="card-numeral">Pillar I</span>
+        <h3>Students &amp; Aspiring Founders</h3>
+        <p>The demand side. Founders articulate what they are building and precisely where they are stuck — that clarity of need drives every match we make.</p>
+      </div>
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">Pillar II</span>
+        <h3>Retired Experts &amp; Veterans</h3>
+        <p>Our signature supply pool: retired engineers, professors, and industry veterans with decades of hard-won experience — motivated by purpose, untapped by every other platform.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Pillar III</span>
+        <h3>Funding, Schemes &amp; Incubation</h3>
+        <p>₹10,000 crore in the Fund of Funds. ₹945 crore in seed funding. Grants up to ₹20 lakh for prototypes. We map you to what you qualify for — then help you win it.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="fleuron">❦</p>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>The best way to predict the future is to create it.</blockquote>
+      <cite>Peter Drucker</cite>
+    </div>
+  </section>
+
+  <section class="wrap" style="text-align:center;">
+    <div class="sect-label reveal"><span class="numeral">IV.</span><span class="title">The First Step</span></div>
+    <h2 class="display reveal" style="margin:0 auto 1.5rem;">Your idea deserves more than a bookmark folder of schemes you never applied to.</h2>
+    <p class="lede reveal" style="margin:0 auto 2.5rem;">Tell us what you are building and where you are stuck.
+      We diagnose the real bottleneck, match you to a mentor who has solved it before,
+      and walk with you until the loop is closed.</p>
+    <a class="btn btn--solid reveal" href="#join">Apply as a Founder</a>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════ THE MODEL ════════════════════════════ -->
+<main class="page" id="page-model">
+
+  <div class="page-head wrap">
+    <p class="crumb reveal">The Model</p>
+    <h1 class="reveal">Not another directory.<br />A <em>done-with-you</em> ecosystem.</h1>
+    <p class="page-sub reveal">CTLYST begins as a curated, human-run service and evolves into a platform —
+      because trust is built by hand before it is built by software.</p>
+  </div>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">Vision &amp; Mission</span></div>
+    <div class="grid-2">
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">Vision</span>
+        <h3>An India where no good idea fails</h3>
+        <p>— for lack of guidance, skills, or awareness of the support that already exists around it.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Mission</span>
+        <h3>Connect founders to what moves them forward</h3>
+        <p>Experienced mentors, practical hands-on help, and the right funding and government schemes — through one trusted, high-touch ecosystem.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">How It Works</span></div>
+    <h2 class="display reveal">Six steps from <em>stuck</em> to <em>moving.</em></h2>
+    <div class="ledger reveal" style="margin-top:2rem;">
+      <div class="ledger-row">
+        <span class="roman">i.</span>
+        <h3>Intake</h3>
+        <p>You submit your idea and your specific unmet needs — skills, prototype, operations, mentorship, or funding.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">ii.</span>
+        <h3>Diagnosis</h3>
+        <p>We clarify your real bottleneck and your true stage — rather than taking the stated need at face value.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iii.</span>
+        <h3>Matching</h3>
+        <p>You are connected to a suitable mentor or advisor and, where relevant, to hands-on technical or operational help.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iv.</span>
+        <h3>Resource Mapping</h3>
+        <p>We surface the incubators, grants, subsidies, and schemes most relevant to your stage and sector.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">v.</span>
+        <h3>Facilitation</h3>
+        <p>We support introductions, applications, and follow-through — so opportunities convert into outcomes, not bookmarks.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">vi.</span>
+        <h3>Tracking</h3>
+        <p>Progress is monitored, feedback is gathered, and matches are refined over time. Success is measured by founders actually advancing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="band-kicker reveal">The Distinction</p>
+      <h2 class="reveal">Mentorship <em>+</em> technical help <em>+</em> funding <em>+</em> scheme navigation —
+        each exists somewhere. Integrating all of them around <em>one founder</em> is what almost no one does.</h2>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">III.</span><span class="title">Who We Serve</span></div>
+    <div class="table-scroll reveal">
+      <table class="classic">
+        <thead>
+          <tr><th>Segment</th><th>Who they are</th><th>What they receive</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Students &amp; early founders</strong></td>
+            <td>College students, recent graduates, and first-time entrepreneurs — especially outside the major metros.</td>
+            <td>Guidance, practical help, and access to funding and schemes.</td>
+          </tr>
+          <tr>
+            <td><strong>Experienced professionals &amp; retirees</strong></td>
+            <td>Retired engineers, professors, and industry veterans with deep domain experience.</td>
+            <td>Purpose, engagement, and a structured way to contribute.</td>
+          </tr>
+          <tr>
+            <td><strong>Incubators, schemes &amp; funders</strong></td>
+            <td>Government programmes, incubation centres, grant bodies, and CSR-minded corporates.</td>
+            <td>A curated pipeline of prepared, relevant founders.</td>
+          </tr>
+        </tbody>
+        <caption>A three-sided market: the students are the customers whose problems define the service; the mentors and resources are the supply that makes it valuable.</caption>
+      </table>
+    </div>
+  </section>
+
+  <p class="fleuron">❦</p>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">IV.</span><span class="title">Where We Begin</span></div>
+    <h2 class="display reveal">Hyperlocal first. <em>Under-served India</em> next.</h2>
+    <div class="grid-3" style="margin-top:2.5rem;">
+      <div class="card reveal">
+        <span class="card-numeral">Phase I</span>
+        <h3>Home Base — Mumbai</h3>
+        <p>Launch hyper-locally, using our own college and personal networks to run the first manual matches and build living proof.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Phase II</span>
+        <h3>Tier-2 &amp; Tier-3 Cities</h3>
+        <p>Expand into smaller Maharashtra cities and neighbouring regions — where competition is thin and the awareness gap is widest.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Phase III</span>
+        <h3>Replicate the Playbook</h3>
+        <p>Once a repeatable city-level model works, extend it state by state, adapting to each state's startup policies.</p>
+      </div>
+    </div>
+    <p class="lede reveal" style="margin-top:2.5rem;">Metros are already well-served; we treat them as a learning ground, not the destination.
+      The defensible opportunity lies in the cities beyond them — where founders have the least access and the most to gain.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>Ideas are easy. Implementation is hard.</blockquote>
+      <cite>Guy Kawasaki</cite>
+    </div>
+  </section>
+
+  <section class="wrap" style="text-align:center;">
+    <a class="btn btn--solid reveal" href="#why">See Why Founders Choose Us</a>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════ WHY US ════════════════════════════ -->
+<main class="page" id="page-why">
+
+  <div class="page-head wrap">
+    <p class="crumb reveal">Why Us</p>
+    <h1 class="reveal">Why students should make us their <em>first choice.</em></h1>
+    <p class="page-sub reveal">Not because the idea is novel — but because nobody else closes the loop.</p>
+  </div>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">Five Reasons</span></div>
+    <div class="ledger reveal">
+      <div class="ledger-row">
+        <span class="roman">i.</span>
+        <h3>Integration, not just introduction</h3>
+        <p>One place that handles mentorship, practical help, and funding access <em>together</em> — not a referral to three separate systems that never speak to each other.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">ii.</span>
+        <h3>A curated retiree mentor network</h3>
+        <p>Deep, low-cost, purpose-driven expertise from retired engineers, professors, and industry veterans — a supply pool that platforms built on peer founders simply do not tap.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iii.</span>
+        <h3>High-touch and done-with-you</h3>
+        <p>Hands-on support and follow-through, versus the largely self-serve incumbents. We do not point at the door; we walk through it with you.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">iv.</span>
+        <h3>Hyperlocal trust</h3>
+        <p>Built for students and under-served Tier-2 and Tier-3 cities — relationships and credibility that national platforms cannot replicate from a dashboard.</p>
+      </div>
+      <div class="ledger-row">
+        <span class="roman">v.</span>
+        <h3>We close the loop</h3>
+        <p>Success is measured by founders actually advancing — a prototype built, a grant secured — never by a connection merely made.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>If you really look closely, most overnight successes took a long time.</blockquote>
+      <cite>Steve Jobs</cite>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="band-kicker reveal">The Facts on Our Side</p>
+      <h2 class="reveal">₹945 crore sits in the Seed Fund Scheme. Grants of up to <em>₹20 lakh</em> exist for prototypes alone.
+        Most student founders have <em>never heard of either.</em></h2>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">The Numbers That Matter</span></div>
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="num">₹<span data-count="10">0</span>,000 Cr</div>
+        <div class="label">Fund of Funds corpus</div>
+      </div>
+      <div class="stat">
+        <div class="num">₹<span data-count="945">0</span> Cr</div>
+        <div class="label">Seed Fund Scheme corpus</div>
+      </div>
+      <div class="stat">
+        <div class="num">₹<span data-count="50">0</span> lakh</div>
+        <div class="label">Max seed funding per startup</div>
+      </div>
+      <div class="stat">
+        <div class="num"><span data-count="3">0</span> years</div>
+        <div class="label">Income-tax holiday (80-IAC)</div>
+      </div>
+    </div>
+    <p class="form-note reveal" style="text-align:center;">Every rupee above already exists, funded by the Government of India. The gap is awareness and navigation — the gap we close.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">III.</span><span class="title">An Honest Comparison</span></div>
+    <h2 class="display reveal">We respect the incumbents. We simply <em>finish what they start.</em></h2>
+    <div class="table-scroll reveal" style="margin-top:2rem;">
+      <table class="classic">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Mentorship</th>
+            <th>Hands-on execution</th>
+            <th>Scheme navigation</th>
+            <th>Student-first</th>
+            <th>Local trust</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>MAARG (Startup India)</strong></td>
+            <td class="yes">Yes — AI matching</td><td>—</td><td>Partial</td><td>—</td><td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Atal Innovation Mission</strong></td>
+            <td class="yes">Yes</td><td>Partial — labs</td><td>—</td><td class="yes">Yes</td><td>Institution-led</td>
+          </tr>
+          <tr>
+            <td><strong>TiE</strong></td>
+            <td class="yes">Yes</td><td>—</td><td>—</td><td>Metro-oriented</td><td>Membership-gated</td>
+          </tr>
+          <tr>
+            <td><strong>NASSCOM 10,000 Startups</strong></td>
+            <td>Partial</td><td class="yes">Yes — tech skew</td><td>—</td><td>—</td><td>—</td>
+          </tr>
+          <tr>
+            <td><strong>CTLYST</strong></td>
+            <td class="yes">Yes — curated retirees</td>
+            <td class="yes">Yes — done-with-you</td>
+            <td class="yes">Yes — end-to-end</td>
+            <td class="yes">Yes — by design</td>
+            <td class="yes">Yes — hyperlocal</td>
+          </tr>
+        </tbody>
+        <caption>No single player today combines all three pillars into one high-touch, hyperlocal journey — and none is built around a curated retiree mentor pool. That integration is the whitespace.</caption>
+      </table>
+    </div>
+  </section>
+
+  <p class="fleuron">❦</p>
+
+  <section class="wrap wrap--narrow">
+    <div class="sect-label reveal"><span class="numeral">IV.</span><span class="title">Our Candour</span></div>
+    <p class="dropcap reveal" style="font-size:1.25rem;">We will tell you what most pitch decks will not: the concept itself is not unique,
+      and we do not pretend otherwise. Our edge cannot rest on novelty — it must be earned through execution quality,
+      the calibre of our mentor bench, local credibility, and a demonstrated ability to get founders funded and building.
+      That is exactly the standard we ask you to hold us to. A platform that measures itself by connections made will
+      show you a big number. We would rather show you a founder who shipped.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>Chase the vision, not the money; the money will end up following you.</blockquote>
+      <cite>Tony Hsieh, Zappos</cite>
+    </div>
+  </section>
+
+  <section class="wrap" style="text-align:center;">
+    <a class="btn btn--solid reveal" href="#join">Make Us Your First Call</a>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════ SCHEMES ════════════════════════════ -->
+<main class="page" id="page-schemes">
+
+  <div class="page-head wrap">
+    <p class="crumb reveal">The Resource Ledger</p>
+    <h1 class="reveal">The money is <em>already there.</em><br />We help you reach it.</h1>
+    <p class="page-sub reveal">A reference to the major Government of India schemes we navigate with our founders —
+      substantial, well-funded, and chronically under-used.</p>
+  </div>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">The Six Instruments</span></div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <span class="card-numeral">Scheme I</span>
+        <h3>Startup India Seed Fund Scheme</h3>
+        <p>Grants up to <strong>₹20 lakh</strong> for prototyping and up to <strong>₹50 lakh</strong> as seed funding,
+          via approved incubators, from a <strong>₹945 crore</strong> corpus. The prime early-stage resource.</p>
+      </div>
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">Scheme II</span>
+        <h3>Fund of Funds for Startups</h3>
+        <p>A <strong>₹10,000 crore</strong> corpus managed via SIDBI, funding SEBI-registered AIFs that invest in startups —
+          indirect equity funding at the growth stage.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Scheme III</span>
+        <h3>Credit Guarantee Scheme</h3>
+        <p><strong>Collateral-free</strong> loan guarantees for eligible startups, operational since April 2023 —
+          debt without pledging your family's assets.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Scheme IV</span>
+        <h3>Section 80-IAC Tax Benefit</h3>
+        <p>A <strong>three-year income-tax deduction</strong> for eligible DPIIT-recognised startups —
+          dramatically reducing the early tax burden after incorporation.</p>
+      </div>
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">Scheme V</span>
+        <h3>Atal Innovation Mission</h3>
+        <p>Incubation centres, tinkering labs, and the <strong>"Mentors of Change"</strong> network under NITI Aayog —
+          strong for hardware and social ventures at the grassroots.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Scheme VI</span>
+        <h3>State Startup Policies</h3>
+        <p>State-level grants, incubation, and dedicated funds — including <strong>Maharashtra's</strong>,
+          directly relevant to our Mumbai launch city and beyond.</p>
+      </div>
+    </div>
+    <p class="form-note reveal" style="text-align:center;">Indicative as of late 2025. Scheme terms, corpus sizes, and eligibility evolve —
+      we verify current terms on the official <a href="https://www.startupindia.gov.in" rel="noopener">Startup India portal</a> before advising any founder.</p>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="band-kicker reveal">Why This Page Exists</p>
+      <h2 class="reveal">Awareness of these schemes remains uneven — <em>lowest exactly where the need is highest:</em>
+        among first-time and small-city founders. That gap is where CTLYST stands.</h2>
+    </div>
+  </section>
+
+  <section class="wrap wrap--narrow">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">A Worked Example</span></div>
+    <h2 class="display reveal">What navigation is <em>worth.</em></h2>
+    <p class="dropcap reveal" style="font-size:1.25rem;">Suppose a student team has a working concept for an agri-tech device but no money for a prototype.
+      Alone, they might spend a year cold-emailing investors. With CTLYST, the path is different:
+      we match them to a retired production engineer who refines the design for manufacturability,
+      map them to the Seed Fund Scheme's prototype grant of up to ₹20 lakh through an approved incubator,
+      and support the application end-to-end. If a founder secures a ₹5 lakh grant through us,
+      our illustrative 5% success fee is ₹25,000 — paid from money they would never otherwise have found.
+      The founder builds; the mentor contributes; the scheme fulfils its purpose. Everyone leaves the table better off.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>An investment in knowledge pays the best interest.</blockquote>
+      <cite>Benjamin Franklin</cite>
+    </div>
+  </section>
+
+  <section class="wrap" style="text-align:center;">
+    <a class="btn btn--solid reveal" href="#join">Find the Scheme You Qualify For</a>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════ ROADMAP ════════════════════════════ -->
+<main class="page" id="page-roadmap">
+
+  <div class="page-head wrap">
+    <p class="crumb reveal">The Roadmap</p>
+    <h1 class="reveal">Evidence before <em>expenditure.</em></h1>
+    <p class="page-sub reveal">We build nothing until real founders prove it worth building.
+      This is the discipline we practise — and the discipline we teach.</p>
+  </div>
+
+  <section class="wrap wrap--narrow">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">The Road Ahead</span></div>
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <p class="tl-when">Weeks 1–3 · Discovery</p>
+        <h3>Fifteen to twenty honest conversations</h3>
+        <p>Direct discovery talks with student and early founders. We listen for the single most common, most painful bottleneck — the one that recurs across many voices, not one-off complaints.</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-when">Weeks 3–6 · Micro-pilot</p>
+        <h3>Two to three founders, helped end-to-end</h3>
+        <p>Manual matches: a committed mentor plus three to five mapped schemes for each founder, with personal support on the next step. Success signal: at least one founder visibly moves forward.</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-when">Months 2–4 · First cohort</p>
+        <h3>A small cohort and a first partner</h3>
+        <p>A structured founder cohort, and one institutional or CSR partnership signed. Success signal: repeat demand, and the first paying relationship.</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-when">Months 4–12 · Platform</p>
+        <h3>A lightweight platform, earned by evidence</h3>
+        <p>An intake form, a mentor database, a searchable scheme library — automating only the steps proven necessary by hand. Success signal: a repeatable model that holds quality at lower effort.</p>
+      </div>
+      <div class="tl-item reveal">
+        <p class="tl-when">Years 2–3 · Scale test</p>
+        <h3>A second city, then a third</h3>
+        <p>Replication of the city playbook, sustainable unit economics — or a clear-eyed pivot. We measure ourselves against outcomes, not optimism.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="band-kicker reveal">A Sobering Truth We Plan Around</p>
+      <h2 class="reveal">Most ventures fail from running out of <em>money or patience</em> — not from a bad idea.
+        We pace our spending and our promises accordingly.</h2>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">Capital Discipline</span></div>
+    <h2 class="display reveal">Deliberately <em>capital-light.</em></h2>
+    <div class="table-scroll reveal" style="margin-top:2rem;">
+      <table class="classic">
+        <thead>
+          <tr><th>Phase</th><th>Focus</th><th>Main costs</th><th>Est. budget</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Validation</strong> (0–3 mo)</td>
+            <td>Discovery and manual pilots</td>
+            <td>Travel, communications, founder's time</td>
+            <td>₹0 – 50,000</td>
+          </tr>
+          <tr>
+            <td><strong>Early operations</strong> (3–12 mo)</td>
+            <td>Small cohort, basic platform</td>
+            <td>Simple tools, part-time help, outreach, light mentor incentives</td>
+            <td>₹5 – 15 lakh</td>
+          </tr>
+          <tr>
+            <td><strong>Growth</strong> (Year 2+)</td>
+            <td>Team, technology, multi-city expansion</td>
+            <td>Salaries, platform development, marketing</td>
+            <td>₹25 lakh+ (raise / grants)</td>
+          </tr>
+        </tbody>
+        <caption>Bootstrap first. Government grants and CSR sponsorship offset early costs; external capital only once a repeatable model and clear unit economics exist. The cardinal rule: never hire or build ahead of validation.</caption>
+      </table>
+    </div>
+  </section>
+
+  <p class="fleuron">❦</p>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">III.</span><span class="title">Milestones We Hold Ourselves To</span></div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <span class="card-numeral">0–6 months</span>
+        <h3>Validation</h3>
+        <p>15–20 discovery talks completed · 2–3 successful manual matches · the problem confirmed or honestly refined.</p>
+      </div>
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">6–18 months</span>
+        <h3>Early Traction</h3>
+        <p>First cohort run · 1–2 institutional partners · the first rupee of revenue · a basic platform live.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">2–3 years</span>
+        <h3>Scale Test</h3>
+        <p>A repeatable model · expansion to a second and third city · sustainable unit economics — or a clear-eyed pivot.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>Vision without execution is hallucination.</blockquote>
+      <cite>attributed to Thomas Edison</cite>
+    </div>
+  </section>
+
+  <section class="wrap" style="text-align:center;">
+    <a class="btn btn--solid reveal" href="#join">Walk This Road With Us</a>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════ JOIN US ════════════════════════════ -->
+<main class="page" id="page-join">
+
+  <div class="page-head wrap">
+    <p class="crumb reveal">Join Us</p>
+    <h1 class="reveal">Tell us where you are <em>stuck.</em></h1>
+    <p class="page-sub reveal">Founders, mentors, and institutions — this is the front door.
+      Write plainly; we read everything.</p>
+  </div>
+
+  <section class="wrap">
+    <div class="sect-label reveal"><span class="numeral">I.</span><span class="title">Who Should Write</span></div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <span class="card-numeral">Founders</span>
+        <h3>You have an idea and a wall</h3>
+        <p>Tell us what you are building and the single biggest blocker in front of you — technical, operational, or financial.</p>
+      </div>
+      <div class="card card--tinted reveal">
+        <span class="card-numeral">Mentors</span>
+        <h3>You have experience and time</h3>
+        <p>Retired engineer, professor, or industry veteran? Your decades of judgement are the rarest resource in this ecosystem.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-numeral">Institutions</span>
+        <h3>You have students and a mandate</h3>
+        <p>Colleges, incubators, and CSR-minded corporates — offer your students a managed path from idea to funded prototype.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap wrap--narrow">
+    <div class="sect-label reveal"><span class="numeral">II.</span><span class="title">The Letter</span></div>
+    <form id="contact-form" class="reveal" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="f-name">Full name</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" maxlength="80" required />
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" maxlength="120" required />
+        </div>
+        <div class="field full">
+          <label for="f-role">I am a…</label>
+          <select id="f-role" name="role" required>
+            <option value="" selected disabled>Choose one</option>
+            <option value="founder">Student / early-stage founder</option>
+            <option value="mentor">Experienced professional / retiree (mentor)</option>
+            <option value="institution">College, incubator, or CSR partner</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <!-- Honeypot: humans never see this. -->
+        <div class="hp-wrap" aria-hidden="true">
+          <label for="f-website">Website</label>
+          <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <div class="field full">
+          <label for="f-message">Your note — what are you building, and where are you stuck?</label>
+          <textarea id="f-message" name="message" maxlength="2000" required></textarea>
+        </div>
+      </div>
+      <p class="form-note">We reply to every serious note within 48 hours. Private &amp; confidential — your idea is yours.</p>
+      <div style="margin-top:1.6rem;">
+        <button class="btn btn--solid" type="submit">Send the Letter</button>
+      </div>
+      <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section class="wrap wrap--narrow">
+    <div class="sect-label reveal"><span class="numeral">III.</span><span class="title">Before You Write — Six Questions Worth Asking Yourself</span></div>
+    <div class="ledger reveal">
+      <div class="ledger-row"><span class="roman">i.</span><h3>The blocker</h3><p>What is the single biggest blocker to moving your idea forward right now?</p></div>
+      <div class="ledger-row"><span class="roman">ii.</span><h3>The wall</h3><p>When you hit a wall — technical, funding, or operations — what do you actually do today?</p></div>
+      <div class="ledger-row"><span class="roman">iii.</span><h3>The search</h3><p>Have you ever looked for mentorship, grants, or incubators? If not — why not?</p></div>
+      <div class="ledger-row"><span class="roman">iv.</span><h3>The schemes</h3><p>Do you know which government schemes or incubators you might already qualify for?</p></div>
+      <div class="ledger-row"><span class="roman">v.</span><h3>The offer</h3><p>If someone connected you to an experienced mentor and showed you 3–5 relevant schemes — would that meaningfully help?</p></div>
+      <div class="ledger-row"><span class="roman">vi.</span><h3>The counsel</h3><p>Who do you currently turn to for advice — seniors, professors, online communities?</p></div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="pullquote reveal">
+      <span class="mark">“</span>
+      <blockquote>Start where you are. Use what you have. Do what you can.</blockquote>
+      <cite>Arthur Ashe</cite>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-brand">CTLYST</div>
+    <p class="foot-motto">Bridging the gap between ideas and execution.</p>
+    <ul class="foot-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#model">The Model</a></li>
+      <li><a href="#why">Why Us</a></li>
+      <li><a href="#schemes">Schemes</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#join">Join Us</a></li>
+    </ul>
+    <p class="foot-fine">© MMXXVI CTLYST · Mumbai, Maharashtra, India · Private &amp; Confidential</p>
+  </div>
+</footer>
+
+<script>
+/* CTLYST single-file edition — page switching, reveals, counters, form. */
+'use strict';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const PAGES = ['home', 'model', 'why', 'schemes', 'roadmap', 'join'];
+
+  // ── Reveal observer (shared across page switches) ───────────────────
+  let io = null;
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e, i) => {
+          if (e.isIntersecting) {
+            e.target.style.transitionDelay = `${(i % 4) * 90}ms`;
+            e.target.classList.add('in');
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+  }
+
+  // ── Counter animation ────────────────────────────────────────────────
+  const animateCount = (el) => {
+    const target = parseFloat(el.dataset.count);
+    const decimals = (el.dataset.count.split('.')[1] || '').length;
+    const dur = 1600;
+    const t0 = performance.now();
+    const step = (t) => {
+      const p = Math.min((t - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = (target * eased).toFixed(decimals);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  let cio = null;
+  if ('IntersectionObserver' in window) {
+    cio = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            animateCount(e.target);
+            cio.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+  }
+
+  const wirePage = (page) => {
+    page.querySelectorAll('.reveal:not(.in)').forEach((el) => {
+      if (io) io.observe(el);
+      else el.classList.add('in');
+    });
+    page.querySelectorAll('[data-count]').forEach((el) => {
+      if (el.dataset.done) return;
+      el.dataset.done = '1';
+      if (cio) cio.observe(el);
+      else el.textContent = el.dataset.count;
+    });
+  };
+
+  // ── Page switching via hash ──────────────────────────────────────────
+  const showPage = () => {
+    let key = (location.hash || '#home').replace('#', '');
+    if (!PAGES.includes(key)) key = 'home';
+    document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
+    const page = document.getElementById(`page-${key}`);
+    page.classList.add('active');
+    document.querySelectorAll('.nav-links a').forEach((a) => {
+      a.classList.toggle('active', a.getAttribute('href') === `#${key}`);
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    wirePage(page);
+  };
+  window.addEventListener('hashchange', showPage);
+  showPage();
+
+  // ── Mobile menu ──────────────────────────────────────────────────────
+  const burger = document.querySelector('.burger');
+  const links = document.querySelector('.nav-links');
+  if (burger && links) {
+    burger.addEventListener('click', () => {
+      burger.classList.toggle('open');
+      links.classList.toggle('open');
+    });
+    links.querySelectorAll('a').forEach((a) =>
+      a.addEventListener('click', () => {
+        burger.classList.remove('open');
+        links.classList.remove('open');
+      })
+    );
+  }
+
+  // ── Contact form (validate, confirm, keep local copy) ────────────────
+  const form = document.getElementById('contact-form');
+  if (form) {
+    const status = document.getElementById('form-status');
+    const NAME_RE = /^[A-Za-z][A-Za-z .'-]{1,79}$/;
+    const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,24}$/;
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      status.className = 'form-status';
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      if ((data.website || '').trim() !== '') {
+        status.textContent = 'Thank you. We have received your note.';
+        status.classList.add('ok');
+        form.reset();
+        return;
+      }
+
+      const fail = (msg) => {
+        status.textContent = msg;
+        status.classList.add('err');
+      };
+      if (!NAME_RE.test((data.name || '').trim()))
+        return fail("Please enter a valid name (letters, spaces, .'- only).");
+      if (!EMAIL_RE.test((data.email || '').trim()))
+        return fail('Please enter a valid email address.');
+      if (!data.role) return fail('Please choose who you are.');
+      if ((data.message || '').trim().length < 10)
+        return fail('Please tell us a little more — at least 10 characters.');
+
+      try {
+        const key = 'ctlyst_enquiries';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        list.push({
+          name: data.name.trim(),
+          email: data.email.trim(),
+          role: data.role,
+          message: data.message.trim(),
+          at: new Date().toISOString(),
+        });
+        localStorage.setItem(key, JSON.stringify(list));
+      } catch (_) { /* storage unavailable — proceed anyway */ }
+
+      status.textContent =
+        'Thank you — your note is recorded. We reply to every serious founder within 48 hours.';
+      status.classList.add('ok');
+      form.reset();
+    });
+  }
+});
+</script>
+</body>
+</html>
