@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current
-Loop: L5 · iteration 1/3 — The Gap (the signature)
+Loop: L6 · iteration 1/3 — remaining routes (/model, /why, /schemes, /roadmap)
 Blocked on: —
 
 ## Gates passed
@@ -16,7 +16,8 @@ Blocked on: —
       `evidence/L3-2-nav-1440.png`
 - [x] L4 — home verified 2026-08-25. Evidence: `evidence/L4-1-hero-1440.png`,
       `evidence/L4-2-numbers.png`, `evidence/L4-3-keyboard-panel.png`, `evidence/L4-4-home-390.png`
-- [ ] L5 — the Gap
+- [x] L5a — mechanic verified 2026-08-25. Evidence: `evidence/L5a-1-gap-closed.png`
+- [x] L5b — shader verified 2026-08-25. Evidence: `evidence/L5b-4-095.png`
 - [ ] L6 — remaining routes
 - [ ] L7 — join
 - [ ] L8 — hardening
@@ -117,6 +118,25 @@ cap-height, where an interpunct belongs.
    Flip already says "this column is active"; the cursor saying it too is redundant.
    *Kept for now only because §8 names it explicitly; first thing to cut at L8 if needed.*
 
+## L5 gate record
+**L5a — the mechanic**
+| Criterion | Result |
+|---|---|
+| Closing feels weighted and inevitable at 3 scroll speeds | ✓ slow / medium / fast: gap **closes to 0 in all three**, zero widening events, zero overshoot frames |
+| The gap actually closes | ✓ 638 → 433 → 229 → 65 → 0 px |
+
+Travel is **measured**, not a guessed percentage: a fixed `xPercent` left a 322px gap
+that never closed, which would have made the section meaningless. Measured in
+`onRefreshInit`, which runs before ScrollTrigger applies pinning.
+
+**L5b — the shader**
+| Criterion | Result |
+|---|---|
+| Skipped on `hardwareConcurrency <= 4` / `(pointer: coarse)` | ✓ coarse-pointer context: shader absent, DOM seam still present |
+| Skipped under reduced motion | ✓ |
+| L5a DOM crossfade remains the fallback | ✓ the seam element is always rendered; the shader only layers over it |
+| **INV-6: three.js out of first load** | ✓ **202.3 KB at top of page**; the 228.7 KB three chunk arrives only on reaching The Gap |
+
 ## Invariant status
 INV-1 **ok** (30-nav churn, flat) · INV-2 **ok** (cursor + Lenis both off) · INV-3 ok (grep clean) ·
 INV-4 ok (mobile nav works, no h-overflow at 390) · INV-5 **ok** (14 focusables, all ringed) ·
@@ -185,3 +205,23 @@ Things that broke and how they were fixed. Do not repeat these.
   only useful if it happens *before* writing the comment, not after the grep fails
 - Deleting a route leaves stale generated types in `.next/dev/types`; `rm -rf .next/dev
   .next/types` before rebuilding or the build fails on a module that no longer exists
+- **Gating a lazy chunk on device capability alone still loads it eagerly.** The shader
+  mounted at hydration and pulled three.js's 228 KB chunk into first load — INV-6 went
+  180.7 → 430.9 KB. Capability answers *may we*, not *should we yet*; proximity is the
+  second half
+- **An IntersectionObserver created on mount fires immediately.** It starts observing
+  before layout, when the target is still zero-height at y=0 and therefore trivially
+  intersecting. ScrollTrigger refreshes after layout, so its measurement is the real one
+- **`gsap.to` + `invalidateOnRefresh` re-captures the start value from the element's
+  current transform**, so each refresh compounds the offset. The horizontal track drifted
+  one panel per refresh. Always `fromTo` with both endpoints explicit for scrubbed layout
+- **`overflow: hidden` still scrolls programmatically.** Focus landing inside a
+  horizontally-overflowing pinned track made the browser set `scrollLeft` to reveal it,
+  moving content a full viewport with no change to any transform. The tell was that
+  transform and tween progress were byte-identical between working and broken cases and
+  only `getBoundingClientRect` differed
+- **An orthographic r3f camera measures its frustum in pixels**, so `planeGeometry(2,2)`
+  renders as a literal 2px quad. Scale the mesh by `useThree().viewport`
+- **`window.scrollTo` is inert under Lenis — hit for the third time**, once in a test and
+  once in real component code (the gallery focus handler). Any scroll that must actually
+  happen goes through `scrollToY`

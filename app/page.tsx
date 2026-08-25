@@ -2,6 +2,7 @@ import { SplitLines } from "@/lib/split-reveal";
 import { CountUp } from "@/lib/count-up";
 import { FourWalls } from "@/components/four-walls";
 import { TriFold } from "@/components/trifold";
+import { TheGap } from "@/components/the-gap";
 import { CurtainLink } from "@/lib/curtain";
 
 // PLAN §8: figure in mono at large size, unit in Garamond italic *beneath*.
@@ -94,6 +95,9 @@ export default function Home() {
           Why We Are That Place
         </CurtainLink>
       </section>
+
+      {/* ── The Gap · the signature ──────────────────────────────────── */}
+      <TheGap />
 
       {/* ── III · tri-fold ───────────────────────────────────────────── */}
       <TriFold />
