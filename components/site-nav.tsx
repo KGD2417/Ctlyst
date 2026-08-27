@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CurtainLink } from "@/lib/curtain";
 import { ROUTES } from "@/lib/routes";
-import { Monogram } from "@/lib/monogram";
+import { Wordmark } from "@/lib/wordmark";
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -46,13 +46,15 @@ export function SiteNav() {
       </div>
 
       <nav className="mx-auto flex max-w-[1280px] items-center justify-between gap-6 px-6 py-4 lg:px-8">
+        {/* The font-size lives on this anchor, not on <Wordmark>: the preloader's
+            Flip reads it off this element to land the handoff exactly on it. */}
         <CurtainLink
           href="/"
           data-navmark
-          className="block text-ink"
+          className="block text-[1.5rem] text-ink"
           aria-label="CTLYST — home"
         >
-          <Monogram className="h-7 w-auto" strokeWidth={7} />
+          <Wordmark />
         </CurtainLink>
 
         {/* desktop */}

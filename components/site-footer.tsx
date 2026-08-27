@@ -1,10 +1,11 @@
 import { CurtainLink } from "@/lib/curtain";
+import { Wordmark } from "@/lib/wordmark";
 import { ROUTES } from "@/lib/routes";
 
 export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-ink py-14 text-center">
-      <div className="font-display text-3xl uppercase tracking-[0.3em] pl-[0.3em]">CTLYST</div>
+      <Wordmark className="block text-3xl" />
       <p className="t-caption mt-2">Bridging the gap between ideas and execution.</p>
       <ul className="mt-7 flex flex-wrap justify-center gap-7">
         {ROUTES.map((r) => (

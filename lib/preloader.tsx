@@ -3,16 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "@/lib/use-gsap";
 import gsap from "gsap";
-import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { SplitText } from "gsap/SplitText";
 import { Flip } from "gsap/Flip";
-import { Monogram } from "@/lib/monogram";
+import { Wordmark, revealWordmark } from "@/lib/wordmark";
 
-gsap.registerPlugin(DrawSVGPlugin, Flip);
+gsap.registerPlugin(SplitText, Flip);
 
 /**
- * The entrance (L3). The monogram draws stroke by stroke while a mono counter
- * runs 000 → 100, then the mark *becomes* the navbar logo via Flip rather than
- * fading out.
+ * The entrance (L3). The wordmark sets itself letter by letter while a mono
+ * counter runs 000 → 100, then the mark *becomes* the navbar logo via Flip
+ * rather than fading out.
  *
  * Gated on document.fonts.ready so no FOUT lands mid-animation, and hard-capped
  * at --preload-cap (2.2s) so slow assets never hold the page hostage.
@@ -39,26 +39,42 @@ export function Preloader() {
     }
 
     let killed = false;
-    const ctx = gsap.context(() => {
-      const strokes = gsap.utils.toArray<SVGPathElement>("[data-stroke]");
-      const dots = gsap.utils.toArray<SVGCircleElement>("[data-dot]");
+    let ctx: gsap.Context | null = null;
+    let tl: gsap.core.Timeline | null = null;
 
-      const tl = gsap.timeline({
-        onComplete: () => {
-          if (!killed) handoff();
-        },
-      });
+    // Hard cap: whatever the timeline is doing, we are leaving at 2.2s from
+    // mount — including the time spent waiting on fonts below.
+    const capId = window.setTimeout(() => {
+      if (!killed) tl?.progress(1);
+    }, CAP_MS);
 
-      tl.set(strokes, { drawSVG: "0%" })
-        .set(dots, { scale: 0, transformOrigin: "50% 50%" })
-        .to(strokes, {
-          drawSVG: "100%",
-          duration: 0.62,
-          ease: "power3.out",
-          stagger: 0.075,
-        })
-        .to(dots, { scale: 1, duration: 0.22, ease: "power3.out", stagger: 0.06 }, "-=0.3")
-        .to(
+    /**
+     * Everything is built AFTER the fonts land, not merely revealed then.
+     *
+     * SplitText measures the glyphs it is splitting, so splitting against the
+     * fallback face and then having Cormorant swap in underneath leaves every
+     * character mask sized for the wrong font. The old DrawSVG mark was
+     * immune to this — it was an SVG, it had no metrics to get wrong.
+     */
+    const start = Promise.race([
+      document.fonts.ready,
+      new Promise((r) => setTimeout(r, 800)), // fonts must not hold us either
+    ]);
+    start.then(() => {
+      if (killed || !root.current) return;
+      root.current.dataset.ready = "true";
+
+      ctx = gsap.context(() => {
+        tl = gsap.timeline({
+          onComplete: () => {
+            if (!killed) handoff();
+          },
+        });
+
+        const wordmark = root.current?.querySelector("[data-wordmark]");
+        if (wordmark) revealWordmark(tl, wordmark, { duration: 0.62, stagger: 0.075 });
+
+        tl.to(
           { n: 0 },
           {
             n: 100,
@@ -71,24 +87,7 @@ export function Preloader() {
           },
           0,
         );
-
-      // Hard cap: whatever the timeline is doing, we are leaving at 2.2s.
-      const capId = window.setTimeout(() => {
-        if (!killed && tl.isActive()) {
-          tl.progress(1);
-        }
-      }, CAP_MS);
-
-      return () => window.clearTimeout(capId);
-    }, root);
-
-    // Gate the *start* on fonts so the counter and the mark never reflow mid-run.
-    const start = Promise.race([
-      document.fonts.ready,
-      new Promise((r) => setTimeout(r, 800)), // fonts must not hold us either
-    ]);
-    start.then(() => {
-      if (!killed && root.current) root.current.dataset.ready = "true";
+      }, root);
     });
 
     function handoff() {
@@ -110,13 +109,19 @@ export function Preloader() {
         width: rect.width,
         height: rect.height,
         margin: 0,
+        // Now that the mark is real type rather than a scalable SVG, the handoff
+        // has to adopt the navbar's font-size too — otherwise Flip scales a
+        // 90px wordmark down to fit a 131px box and then snaps to 24px when it
+        // hands over. Setting it here means Flip's *end* state already matches
+        // the navbar exactly, and scale:true walks the size change in between.
+        fontSize: getComputedStyle(target).fontSize,
       });
       Flip.from(state, {
         duration: 0.72,
         ease: "power3.inOut",
         absolute: true,
         // INV-3: without this Flip tweens width/height to reconcile the size
-        // change (520px mark -> 131px navbar mark). scale:true makes it use
+        // change (the 90px mark -> the 24px navbar mark). scale:true makes it use
         // scaleX/scaleY instead, so the handoff stays transform-only.
         scale: true,
         onComplete: () => {
@@ -141,8 +146,9 @@ export function Preloader() {
 
     return () => {
       killed = true;
+      window.clearTimeout(capId);
       window.clearTimeout(backstop);
-      ctx.revert();
+      ctx?.revert();
     };
   }, [reducedMotion]);
 
@@ -157,8 +163,8 @@ export function Preloader() {
     >
       <div data-preload-ground className="absolute inset-0 bg-paper" />
 
-      <div ref={mark} className="relative w-[min(52vw,520px)] text-ink">
-        <Monogram className="w-full overflow-visible" strokeWidth={6} drawable />
+      <div ref={mark} className="relative text-[min(9.3vw,90px)] text-ink">
+        <Wordmark />
       </div>
 
       <div data-preload-meta className="relative mt-10 flex flex-col items-center gap-3">

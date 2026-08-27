@@ -400,6 +400,47 @@ front door", INV-8 satisfied). `numeral`/`numeralFor` renamed to `mark`/`markFor
 `markType()` sets words smaller and italic — "The Front Door" at numeral size runs off both
 edges of a phone. Evidence: `evidence/curtain-join-frozen.png`.
 
+## Revision 4 — the mark is the type now, not a drawing of it
+
+Revision 3 was the wrong fix. Adding serifs to the stroked SVG made it *roman*,
+but it still did not match the footer, and the client named the cause exactly:
+"it is probably happening coz ur painting the logo in animation instead of
+actually using that font." Correct. A monoline stroke has no thick/thin
+modulation and none of Cormorant's proportions — it was a drawing *of* the type.
+
+`lib/monogram.tsx` → `lib/wordmark.tsx`. One `<Wordmark>` span of real Cormorant,
+rendered by the navbar, the preloader, The Gap's resolution and the footer, so
+they are the same object at four sizes. The crimson Y and the two gold
+interpuncts are gone with the SVG — the footer never had them, and matching the
+footer was the ask.
+
+**The write-on had to be replaced, not ported.** DrawSVG animates
+`stroke-dashoffset`; real glyphs have no stroke to offset, and outlining them so
+they could be stroked draws their *contour* — a wobbling edge, not writing. So
+`revealWordmark()` splits the mark and rises each glyph out of its own mask
+(`SplitText { type: "chars", mask: "chars" }`, `yPercent: 110 → 0`,
+`power3.out`). Transform-only, so INV-3 holds. Used by both the preloader
+entrance and The Gap's resolution, which keeps them the same gesture.
+
+Two things this broke that the SVG had been hiding:
+
+- **SplitText measures glyphs, so it cannot run before the webfont lands.** The
+  preloader built its timeline immediately and only *revealed* it on
+  `document.fonts.ready`; against an SVG that was harmless. The whole context is
+  now built inside the fonts callback, with the 2.2s hard cap moved out to the
+  effect body so it still counts from mount.
+- **Flip had to adopt the navbar's font-size.** Handing off a scalable SVG only
+  needed the target's rect. Type at 90px scaled into a 136px box snaps to 24px
+  the moment it hands over, so `handoff()` now also sets
+  `fontSize: getComputedStyle(target).fontSize` before `Flip.from` — the end
+  state matches the navbar exactly and `scale: true` walks the difference.
+
+Evidence: `evidence/wordmark-same.png` (navbar and footer, one face),
+`evidence/preloader-mask-midreveal.png` (C in, T nearly, L half, Y cresting —
+each behind its own `overflow: clip` wrapper),
+`evidence/gap-resolve-type.png`. INV-6 re-measured on the production build:
+**223.1 KB gz** first load, three.js absent. No horizontal overflow at 390.
+
 ## Invariant status
 **All eight verified at L8** — see the table above.
 INV-1 ok · INV-2 ok · INV-3 ok · INV-4 ok · INV-5 ok · INV-6 ok (202.4/250 KB) ·
