@@ -62,8 +62,9 @@ export function CustomCursor() {
       tick = (_t: number, dt: number) => {
         // Frame-rate independent: a fixed per-frame factor made the dot settle
         // at twice the speed on a 120Hz display, and wobble whenever the frame
-        // rate moved.
-        const a = dampFactor(0.18, dt);
+        // rate moved. 0.34 ≈ 90ms to settle — enough inertia to read as ink
+        // trailing the hand, not enough to feel like the dot is behind you.
+        const a = dampFactor(0.34, dt);
         pos.x += (target.x - pos.x) * a;
         pos.y += (target.y - pos.y) * a;
         scale += (targetScale - scale) * a;

@@ -5,7 +5,7 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { wipe } from "@/lib/ui-motion";
-import { numeralFor } from "@/lib/routes";
+import { markFor } from "@/lib/routes";
 import { scrollToTop } from "@/lib/scroll-provider";
 
 /**
@@ -24,6 +24,12 @@ const COVER  = 0.26; // s
 const HOLD   = 0.05; // s
 const REVEAL = 0.26; // s  → 570ms nominal, leaving headroom under the 700ms gate
 
+/** Roman numerals get the full plate; a word has to fit the viewport. */
+const markType = (mark: string): React.CSSProperties =>
+  /^[IVX]+$/.test(mark)
+    ? { fontFamily: "var(--font-display)", fontSize: "clamp(4rem, 12vw, 10rem)" }
+    : { fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 6vw, 4.5rem)", fontStyle: "italic" };
+
 const CurtainCtx = createContext<(href: string) => void>(() => {});
 export const useCurtain = () => useContext(CurtainCtx);
 
@@ -31,7 +37,7 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const sheet = useRef<HTMLDivElement>(null);
-  const [numeral, setNumeral] = useState("");
+  const [mark, setMark] = useState("");
   const pending = useRef<string | null>(null);
   const busy = useRef(false);
 
@@ -58,7 +64,7 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
 
       busy.current = true;
       pending.current = href;
-      setNumeral(numeralFor(href));
+      setMark(markFor(href));
       el.style.visibility = "visible";
 
       // Motion drives this through WAAPI, so the wipe runs on the compositor
@@ -88,7 +94,7 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
         await wipe(el, "reveal", REVEAL);
         if (cancelled) return;
         el.style.visibility = "hidden";
-        setNumeral("");
+        setMark("");
         busy.current = false;
       }),
     );
@@ -109,24 +115,19 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
         className="pointer-events-none fixed inset-0 z-[200] flex items-center justify-center bg-crimson"
         style={{ transform: "translateY(100%)", visibility: "hidden", willChange: "transform" }}
       >
-        {/* §9.6 misregistration — use 1 of 2. The numeral prints slightly out of
-            register, then snaps true, like a plate not quite aligned. */}
-        <span className="relative" aria-hidden="true">
+        {/* §9.6 misregistration — use 1 of 2. The mark prints slightly out of
+            register, then snaps true, like a plate not quite aligned.
+            Words set smaller and in italic than the numerals — "The Front Door"
+            at numeral size would run off both edges of a phone. */}
+        <span className="relative whitespace-nowrap" aria-hidden="true">
           <span
             className="absolute inset-0 text-paper/40"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(4rem, 12vw, 10rem)",
-              transform: "translate(var(--misreg), calc(var(--misreg) * -0.5))",
-            }}
+            style={{ ...markType(mark), transform: "translate(var(--misreg), calc(var(--misreg) * -0.5))" }}
           >
-            {numeral}
+            {mark}
           </span>
-          <span
-            className="relative text-paper"
-            style={{ fontFamily: "var(--font-display)", fontSize: "clamp(4rem, 12vw, 10rem)" }}
-          >
-            {numeral}
+          <span className="relative text-paper" style={markType(mark)}>
+            {mark}
           </span>
         </span>
       </div>

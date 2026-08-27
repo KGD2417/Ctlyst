@@ -359,6 +359,47 @@ clear and it is drawing.
 | INV-4 mobile | ✓ no horizontal overflow on any route |
 | Errors / ESLint | ✓ zero |
 
+## Revision 3 — the mark goes roman, and the irreversible bits stop reversing
+
+Client feedback on the deployed preview, four items.
+
+**1. The wordmark is roman now.** The navbar mark was mono-line geometric while the footer
+wordmark was Cormorant — the same name in two unrelated voices on one screen. Redrew
+`MONOGRAM_STROKES` as roman capitals: bracketed serifs on T and the second T, a top serif
+and an upturned arm terminal on L, serifed arms and a footed stem on Y, cut vertical
+terminals on the C bowl, beaks on the S. Serifs are extra subpaths inside each letter's
+own `d`, so DrawSVG still draws one letter at a time and the preloader draw, the L3 Flip
+to the navbar, and The Gap's resolve all keep working untouched. Same viewBox, same
+advance widths, so nothing reflowed. Evidence: `evidence/roman-mono-large.png`.
+
+**2. Forward-only transitions.** `scrub` is bidirectional by definition, so scrolling back
+up unbuilt whatever had just been built. Two places were doing something that shouldn't
+un-happen:
+
+- **The Gap.** Replaced `scrub: 0.6` with a hand-driven timeline: a `quickTo` on a plain
+  `{ p }` object reproduces the same 0.6s of lag, fed from the *high-water mark* of
+  `self.progress`. Downward scroll advances it, upward scroll leaves the resolved mark
+  standing until the pin releases. `animation: tl` is still passed to the ScrollTrigger so
+  `invalidateOnRefresh` re-measures the travel, with `toggleActions: "none none none none"`
+  so it never plays the timeline itself. Evidence: at the pin end `[data-resolve]` is
+  opacity 1 and `ideas` sits at x=428.98; after scrolling back to 40% of the pin, both are
+  unchanged. `evidence/gap-oneway-scrollup.png`.
+- **CountUp.** Held the displayed figure at its own peak. Running a stated figure back
+  down to zero reads as the site retracting a fact.
+
+The reversible ones were left alone on purpose: the four walls are spatial navigation and
+the timeline rule is a progress indicator — both *should* track the scrollbar both ways.
+
+**3. Cursor damping 0.18 → 0.34.** Settle time roughly halves (~250ms → ~120ms). Still
+frame-rate independent through `dampFactor`, so the 120Hz correctness holds.
+
+**4. The curtain no longer prints "VII" over Join.** A roman numeral on the last route read
+as a seventh step — as though you had arrived having skipped six things you were meant to
+do first. It now prints **The Front Door**, which is the join page's own lede ("this is the
+front door", INV-8 satisfied). `numeral`/`numeralFor` renamed to `mark`/`markFor`, and
+`markType()` sets words smaller and italic — "The Front Door" at numeral size runs off both
+edges of a phone. Evidence: `evidence/curtain-join-frozen.png`.
+
 ## Invariant status
 **All eight verified at L8** — see the table above.
 INV-1 ok · INV-2 ok · INV-3 ok · INV-4 ok · INV-5 ok · INV-6 ok (202.4/250 KB) ·

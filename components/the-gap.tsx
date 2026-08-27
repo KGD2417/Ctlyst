@@ -17,7 +17,9 @@ gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin);
  * actual void of empty paper. Scroll progress drives them together; as they
  * meet, the seam bleeds and they resolve into CTLYST in the crimson.
  *
- * This is the ONLY pin-and-scrub section in the build (§5 restraint clause).
+ * The close runs FORWARD ONLY — see the drive at the foot of the timeline.
+ *
+ * This is the ONLY pinned section in the build (§5 restraint clause).
  *
  * L5a is the DOM mechanic with a CSS crossfade at the seam — the scroll feel has
  * to be right before any shader is considered. L5b swaps only the seam.
@@ -93,26 +95,7 @@ export function TheGap() {
       };
       measure();
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          // Longer travel so even a fast flick spends enough frames inside the
-          // pin for the close to read as inevitable rather than skipped.
-          end: "+=" + Math.round(window.innerHeight * 2.2),
-          pin: true,
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-          anticipatePin: 1,
-          onRefreshInit: measure,
-          onUpdate: (self) => {
-            // the bleed only exists after the words meet, so remap 0.56..1 -> 0..1
-            progress.current = gsap.utils.clamp(0, 1,
-              gsap.utils.mapRange(0.58, 0.95, 0, 1, self.progress));
-          },
-          id: "the-gap",
-        },
-      });
+      const tl = gsap.timeline({ paused: true });
 
       // Load the shader chunk only when The Gap comes into view.
       ScrollTrigger.create({
@@ -156,6 +139,54 @@ export function TheGap() {
           { drawSVG: "0% 100%", ease: "power2.out", duration: 0.28, stagger: 0.038 }, 0.82)
         .fromTo(dots, { scale: 0, transformOrigin: "50% 50%" },
           { scale: 1, ease: "power3.out", duration: 0.12, stagger: 0.05 }, 1.02);
+
+      // ── one-way ────────────────────────────────────────────────────────
+      // The close is irreversible: two words become a mark. `scrub` is
+      // bidirectional by definition, so scrolling back up pulled the mark apart
+      // into "ideas"/"execution" again and the one memorable moment on the site
+      // read as a slider. So: drive the timeline by hand off the high-water mark
+      // of scroll progress. Downward scroll advances it; upward scroll leaves
+      // the resolved mark standing until the pin releases.
+      //
+      // quickTo (not tl.progress directly) reproduces what scrub: 0.6 was doing
+      // — the same 0.6s of lag behind the scroll position — with one reusable
+      // tween instead of one per frame.
+      const drive = { p: 0 };
+      let peak = 0;
+      const smooth = gsap.quickTo(drive, "p", {
+        duration: 0.6,
+        ease: "none",
+        onUpdate: () => {
+          tl.progress(drive.p);
+          // the bleed only exists after the words meet, so remap 0.58..0.95 -> 0..1
+          progress.current = gsap.utils.clamp(0, 1,
+            gsap.utils.mapRange(0.58, 0.95, 0, 1, drive.p));
+        },
+      });
+
+      ScrollTrigger.create({
+        trigger: root,
+        start: "top top",
+        // Longer travel so even a fast flick spends enough frames inside the
+        // pin for the close to read as inevitable rather than skipped.
+        end: "+=" + Math.round(window.innerHeight * 2.2),
+        pin: true,
+        anticipatePin: 1,
+        // `animation` is here only so invalidateOnRefresh re-evaluates the
+        // measured travel; toggleActions is muted so it never plays the
+        // timeline itself — the drive above is the only thing that moves it.
+        animation: tl,
+        toggleActions: "none none none none",
+        invalidateOnRefresh: true,
+        onRefreshInit: measure,
+        onRefresh: () => tl.progress(drive.p),
+        onUpdate: (self) => {
+          if (self.progress <= peak) return;
+          peak = self.progress;
+          smooth(peak);
+        },
+        id: "the-gap",
+      });
     });
 
     // ── reduced motion / mobile handled in markup; nothing to animate ─────
