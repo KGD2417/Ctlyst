@@ -10,7 +10,10 @@ import { dampFactor, changed } from "@/lib/damp";
  * Ambient background (§9). Five layers:
  *   A base    — --paper, painted on <body>
  *   B fibre   — grain, dynamically imported (see FibreLayer), 0.05× parallax
+ *   B2 halftone — dithered masses, drifting
  *   C guilloche — ONE <svg>, 0.15× parallax, continuous drift, pointer lerp
+ *   C2 grid + topo — a 48px rule grid under drifting contour lines
+ *   C3 flow    — long curves whose dash travels along them
  *   D wash    — per-route tint
  *   F vignette — radial edge hold
  *
@@ -26,10 +29,45 @@ const DRIFT = { a: 47, b: 61, c: 73, d: 89 } as const; // seconds — all prime
 
 /** Fixed placements for the halftone masses (§9.5 — arrangement, never random). */
 const BLOBS = [
-  { left: "-6vw",  top: "6vh",   size: "44vw", opacity: 0.05,  drift: "b", amp: 14, reverse: false },
-  { left: "66vw",  top: "48vh",  size: "38vw", opacity: 0.042, drift: "c", amp: 18, reverse: true },
-  { left: "34vw",  top: "-14vh", size: "30vw", opacity: 0.035, drift: "d", amp: 12, reverse: true },
+  { left: "-6vw",  top: "6vh",   size: "44vw", opacity: 0.03,  drift: "b", amp: 14, reverse: false },
+  { left: "66vw",  top: "48vh",  size: "38vw", opacity: 0.024, drift: "c", amp: 18, reverse: true },
 ] as const;
+
+/** Contour field, in its own user-unit box. Built once on the client (~8ms). */
+const TOPO_BOX = { w: 2200, h: 1500 };
+
+/**
+ * The flowing curve family, from the reference's generator: 18 copies of one
+ * cubic, each stepped by index. `pathLength` normalises every path so a single
+ * dash tween drives all of them regardless of their real arc length.
+ *
+ * It is 1000 and not 1 because GSAP rounds stroke-dashoffset to whole numbers:
+ * normalised to 1, the entire animation range was [0, -1] and quantised to two
+ * states, so the tween ran (progress climbed) while the curves sat perfectly
+ * still. At 1000 a whole unit is a thousandth of the cycle.
+ */
+const FLOW_CYCLE = 1000;
+// A wider step and a wider box than the reference's: its 696×316 crop puts most
+// of the fan off-canvas, which on a full page reads as a smudge in one corner
+// rather than as curves crossing the field.
+const FLOW_BOX = { x: -430, y: -260, w: 1180, h: 820 };
+const FLOW = Array.from({ length: 18 }, (_, i) => {
+  // Signs are computed, not spliced into the template. The reference writes
+  // `M-${380 - k}`, which emits "M--10" the moment that term goes negative —
+  // and widening the step is exactly what pushes it negative.
+  const k = i * 26;
+  const v = i * 12;
+  const x0 = -(380 - k), y0 = -(189 + v);
+  const x1 = -(312 - k), y1 = 216 - v;
+  const x2 = 152 - k,    y2 = 343 - v;
+  const x3 = 616 - k,    y3 = 470 - v;
+  const x4 = 684 - k,    y4 = 875 - v;
+  return {
+    d: `M${x0} ${y0}C${x0} ${y0} ${x1} ${y1} ${x2} ${y2}C${x3} ${y3} ${x4} ${y4} ${x4} ${y4}`,
+    width: 0.5 + i * 0.06,
+    dur: 26 + (i % 7) * 3.5, // co-prime-ish spread, so the family never pulses in unison
+  };
+});
 
 const WASH: Record<string, string> = {
   "/why": "var(--color-crimson)",
@@ -68,6 +106,8 @@ export function Atmosphere() {
   const layerC = useRef<SVGSVGElement>(null);
   const layerB = useRef<HTMLDivElement>(null);
   const blobs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const [topo, setTopo] = useState<string[]>([]);
 
   const all = arrangementFor(pathname);
   const [placements, setPlacements] = useState(all);
@@ -111,6 +151,23 @@ export function Atmosphere() {
         if (!el) return;
         el.style.backgroundImage = `url(${makeDitherBlob(low ? 256 : 512, low ? 8 : 6, i * 1.7)})`;
       });
+
+      // Contour field. Marching squares over ~12k samples costs one frame, and
+      // measured as a 56ms long task when it ran during mount — so it waits for
+      // idle, and a weak device gets a coarser field rather than a slower one.
+      // Client-only besides: 86KB of path data has no business in the HTML, and
+      // the field is deterministic, so every load would emit the same bytes.
+      const { makeTopoPaths } = await import("@/lib/topo");
+      if (cancelled) return;
+      const build = () => {
+        if (cancelled) return;
+        setTopo(makeTopoPaths({
+          width: TOPO_BOX.w, height: TOPO_BOX.h,
+          ...(low ? { cols: 84, rows: 58, levels: 9 } : null),
+        }));
+      };
+      if ("requestIdleCallback" in window) requestIdleCallback(build, { timeout: 2000 });
+      else setTimeout(build, 400);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -141,6 +198,19 @@ export function Atmosphere() {
             yoyo: true,
             transformOrigin: "50% 50%",
           });
+        });
+      }
+
+      // ── C3 · the dash travelling along each curve ────────────────────────
+      // Every path carries pathLength="1", so one normalised tween drives the
+      // whole family. stroke-dashoffset is the same mechanism DrawSVG already
+      // uses on this site; INV-3's ban is on layout properties, not on dash.
+      if (!reduced.matches) {
+        gsap.utils.toArray<SVGPathElement>("[data-flow]").forEach((path) => {
+          gsap.fromTo(path,
+            { strokeDashoffset: 0 },
+            { strokeDashoffset: -FLOW_CYCLE, duration: Number(path.dataset.dur), ease: "none", repeat: -1 },
+          );
         });
       }
 
@@ -217,7 +287,7 @@ export function Atmosphere() {
           data-drift-secs={DRIFT[b.drift]}
           data-drift-amp={b.amp}
           data-reverse={b.reverse ? "true" : "false"}
-          className={`absolute ${i === 2 ? "hidden md:block" : ""}`}
+          className="absolute"
           style={{
             left: b.left, top: b.top, width: b.size, height: b.size,
             backgroundSize: "contain", backgroundRepeat: "no-repeat",
@@ -229,6 +299,65 @@ export function Atmosphere() {
           ref={(el) => { blobs.current[i] = el; }}
         />
       ))}
+
+      {/* C2a · the 48px rule grid. Static CSS gradients — no element per line,
+          nothing to animate, and it is what reads as "instrument" under the
+          contours rather than as decoration. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px)," +
+            "linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 30%, transparent 100%)",
+        }}
+      />
+
+      {/* C2b · contour lines. Baked once, then only translated — the reference
+          shader animates by panning its noise field, which is the same thing. */}
+      <svg
+        data-drift
+        data-drift-secs={DRIFT.a}
+        data-drift-amp={4}
+        data-reverse="false"
+        viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-[-14%] h-[128%] w-[128%]"
+        style={{ willChange: "transform" }}
+      >
+        <g fill="none" stroke="var(--color-ink)" strokeWidth="1" vectorEffect="non-scaling-stroke">
+          {topo.map((d, i) => (
+            // Bands nearer the middle of the field carry more weight, so the set
+            // reads as terrain with a ridge line rather than as one flat hatch.
+            <path key={i} d={d} opacity={(0.14 - Math.abs(topo.length / 2 - i) * 0.012).toFixed(3)} vectorEffect="non-scaling-stroke" />
+          ))}
+        </g>
+      </svg>
+
+      {/* C3 · flowing curves */}
+      <svg
+        viewBox={`${FLOW_BOX.x} ${FLOW_BOX.y} ${FLOW_BOX.w} ${FLOW_BOX.h}`}
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-0 h-full w-full"
+        style={{ willChange: "opacity" }}
+      >
+        <g fill="none" stroke="var(--color-ink)">
+          {FLOW.map((p, i) => (
+            <path
+              key={i}
+              data-flow
+              data-dur={p.dur}
+              d={p.d}
+              pathLength={FLOW_CYCLE}
+              strokeDasharray={`${FLOW_CYCLE * 0.22} ${FLOW_CYCLE * 0.78}`}
+              strokeWidth={p.width}
+              strokeOpacity={0.05 + i * 0.004}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </g>
+      </svg>
 
       {/* D · wash — per-route tint, 2% */}
       {WASH[pathname] && (

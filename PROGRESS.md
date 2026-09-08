@@ -491,6 +491,48 @@ teardown is unchanged. **The L2 cursor evidence is superseded** — "scale 1.00 
 longer describes the cursor; that 2.6× upscale of a 12px raster *was* the reported
 pixelation.
 
+## Client revision · 2026-09-08b — topographic atmosphere
+
+Two components were supplied to integrate (a WebGL `TopoField` and an SVG
+`FloatingPaths`). **Neither was installed as given**, for reasons stated to the
+client: `TopoField` ships as a sandboxed iframe containing a whole landing page
+that pulls Tailwind, GSAP and Iconify from three CDNs and then hides everything
+but its canvas — external requests on every route, a second Tailwind, a duplicate
+GSAP, against BRIEF §11 and INV-6 — and its "light mode" is a string-patch of a
+shader authored for black. `FloatingPaths` drives `motion`, which CLAUDE.md
+reserves for route transitions, and hardcodes `slate-950`.
+
+Both looks were rebuilt natively inside `Atmosphere` instead, in paper/ink:
+
+| Layer | What it is |
+|---|---|
+| C2a grid | 48px rule grid, two static CSS gradients, radial-masked. No element per line |
+| C2b topo | 11 contour paths from marching squares over 3-octave value noise (`lib/topo.ts`), translated only |
+| C3 flow | 18 curves from the reference's generator; the dash travels along each at its own rate |
+
+**Why the contours are baked, not shaded:** the reference animates by
+`noisePos = st * scale + t * vec2(...)` — the field never deforms, it *pans*. So
+a static vector field that translates is the same picture without a fullscreen
+fragment shader.
+
+Evidence: `evidence/rev-12-topo-flow-1440.png`, `evidence/rev-13-topo-flow-390.png`.
+
+| Measure | Baseline (pre-revision) | After |
+|---|---|---|
+| Frame time, scrolling, steady state | median 16.7 / p95 17.9 / **0 dropped, 0 long tasks** | median 16.6 / p95 18.3 / **0 dropped, 0 long tasks** |
+| First-load JS | 222.5 KB | **223.5 KB** (budget 250) |
+| Server HTML | — | 47.7 KB on the wire vs 233 KB DOM — the 86 KB contour field is client-only |
+
+`lib/topo.check.ts` (`npx tsx lib/topo.check.ts`) asserts the field: populated
+levels, in-box coordinates, determinism, and a build under 40ms.
+
+Invariants: both new animations sit in the existing `gsap.context` (INV-1) behind
+the existing `prefers-reduced-motion` guard (INV-2); the contour layer is
+translate-only and the flow layer animates stroke-dash, the same mechanism
+DrawSVG already uses here (INV-3). The halftone masses were dialled down from
+0.05/0.042/0.035 to 0.03/0.024 and reduced from three to two — four ambient
+systems at full strength was soup. That is a knob, not a decision.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -600,3 +642,17 @@ Things that broke and how they were fixed. Do not repeat these.
 - **Viewport-sized display type overflows a grid column.** `clamp(…, 6vw, 5rem)` is sized
   for the page, not the card: "₹10,000" is seven monospaced glyphs and printed straight
   out through the card's right edge. Size figures in `cqi` against the card instead
+- **GSAP rounds `stroke-dashoffset` to whole numbers.** With `pathLength={1}`,
+  the entire dash cycle is one unit, so every interpolated value quantised to 0
+  or -1 and the curves sat perfectly still — while `tween.progress()` climbed and
+  `isActive()` was true, which is what made it look like a live animation with a
+  rendering fault. Normalise to 1000, not 1. Diagnosed only by logging the tween's
+  progress *and* the element's written style in the same tick
+- **A one-off build during mount is a dropped frame, not a free lunch.** The
+  contour field measured 9ms in isolation and landed as a **56ms long task** in
+  the browser once React reconciliation and first rasterisation joined it. Moved
+  behind `requestIdleCallback`: 0 long tasks, same picture
+- **`M-${a - b}` emits `M--10` the moment the term goes negative.** Path templates
+  that splice a minus sign in front of an expression are a latent crash — they
+  work only for the parameter range the author happened to try. Compute the
+  number, let the sign fall out
