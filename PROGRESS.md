@@ -662,6 +662,28 @@ Not yet revisited under the dark theme: the Gap's WebGL pass got new uniform
 colours but its shader was tuned for ink-on-paper, and the four-walls panels have
 not been reviewed for the new ground.
 
+## Client revision · 2026-09-09 — the gradient word was clipping its own descender
+
+Reported as the same symptom as the earlier line-mask bug, but a different
+cause: `background-clip: text` paints the gradient into the element's PADDING
+box and then clips it to the glyph shapes, so any part of a glyph hanging
+outside that box is never painted at all. The italic *g* of "guidance" hangs
+below it, so its tail vanished.
+
+Isolated rather than guessed: the same 120px crop shot three times — as shipped,
+with the gradient technique disabled (tail intact → background-clip is the
+cause), and with the line mask's clipping removed (tail still gone → the mask
+was innocent). `evidence/rev-30-g-gradient.png`, `rev-31-g-plaincolour.png`,
+`rev-33-g-after.png`, `rev-36-word-final.png`.
+
+Fix: `padding-block: 0.3em` on the inline element. Vertical padding on an inline
+box extends the paint area without touching the line box — measured identical
+afterwards (line height 119.2, top 479.3), so nothing reflowed.
+
+The padding then changed the gradient itself, because a 100deg ramp maps across
+the box's diagonal and the box had just grown taller. The ramp is now 90deg, so
+it is independent of the paint box's height.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -828,3 +850,11 @@ Things that broke and how they were fixed. Do not repeat these.
 - **sRGB interpolation kills a two-hue gradient.** crimson → indigo through sRGB
   passes a dead grey-brown; `in oklch` keeps the chroma up across the middle.
   Also mind the mix ratio: indigo at 45% read as magenta, not as an ember cooling
+- **`background-clip: text` clips to the glyphs but paints only within the
+  padding box.** Any descender, swash or accent that overhangs the box is simply
+  not painted, and it looks exactly like a clipping bug in an ancestor. Vertical
+  padding on an inline element fixes it for free — inline padding does not affect
+  the line box
+- **An angled gradient depends on the box's height.** Adding padding to fix the
+  descender silently re-mapped which part of the ramp each glyph received. If a
+  ramp should read consistently across a line, keep it at 90deg

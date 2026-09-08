@@ -215,10 +215,21 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 /* Emphasis type. Kept to short spans — a gradient across a paragraph is
    unreadable and, being background-clipped, invisible to forced-colors. */
 .grad-text {
-  background: linear-gradient(100deg in oklch, var(--color-crimson) 0%, var(--color-gold) 55%, var(--color-indigo) 100%);
+  /* 90deg, not an angle: an angled ramp maps across the box's DIAGONAL, so the
+     padding added below changed which part of the ramp each glyph got. Horizontal
+     is independent of box height, so the word reads the same whatever the paint
+     box does. */
+  background: linear-gradient(90deg in oklch, var(--color-crimson) 0%, var(--color-gold) 58%, var(--color-indigo) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* The background is painted to the PADDING box and then clipped to the
+     glyphs, so any part of a glyph hanging outside that box is simply never
+     painted — which sliced the tail off the italic g in "guidance". Vertical
+     padding on an inline element extends the paint area without touching the
+     line box, so nothing reflows. 0.3em covers Cormorant's italic descenders
+     with room to spare. */
+  padding-block: 0.3em;
 }
 @media (forced-colors: active) {
   .grad-text { background: none; color: CanvasText; }
