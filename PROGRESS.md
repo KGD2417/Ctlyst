@@ -676,7 +676,13 @@ cause), and with the line mask's clipping removed (tail still gone → the mask
 was innocent). `evidence/rev-30-g-gradient.png`, `rev-31-g-plaincolour.png`,
 `rev-33-g-after.png`, `rev-36-word-final.png`.
 
-Fix: `padding-block: 0.3em` on the inline element. Vertical padding on an inline
+Fix: `padding-block: 0.3em` on the inline element — and then `padding-inline:
+0.22em` with a cancelling `margin-inline: -0.22em`, because the italic g's tail
+also sweeps LEFT of the element's inline start and that side was clipped too.
+Inline padding does affect layout, so the negative margin is what keeps it
+honest: glyph positions measure 712.16px with and without the fix, identical.
+
+Original fix: Vertical padding on an inline
 box extends the paint area without touching the line box — measured identical
 afterwards (line height 119.2, top 479.3), so nothing reflowed.
 

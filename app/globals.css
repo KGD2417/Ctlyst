@@ -230,6 +230,12 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
      line box, so nothing reflows. 0.3em covers Cormorant's italic descenders
      with room to spare. */
   padding-block: 0.3em;
+  /* Same problem on the horizontal axis: an italic g's tail sweeps LEFT of the
+     element's inline start, outside the paint box. Inline padding, unlike block
+     padding, does affect layout — so an equal negative margin cancels it and the
+     line breaks exactly where it did before. */
+  padding-inline: 0.22em;
+  margin-inline: -0.22em;
 }
 @media (forced-colors: active) {
   .grad-text { background: none; color: CanvasText; }
