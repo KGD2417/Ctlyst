@@ -690,6 +690,38 @@ The padding then changed the gradient itself, because a 100deg ramp maps across
 the box's diagonal and the box had just grown taller. The ramp is now 90deg, so
 it is independent of the paint box's height.
 
+## Client revision · 2026-09-09b — frosted surfaces
+
+The navbar, both nav panels, the scheme cards, the tri-fold pillars, the demo
+console and its open case, and the join form's choice boxes are now frosted
+panes over the gradient: one `.glass` utility (58% tint, `blur(20px)
+saturate(1.4)`, a 18% ink hairline) plus `.glass-lit` for the lit top edge that
+makes a pane read as glass rather than as a grey box.
+
+Tuned by looking: at the first value (72% tint / 16px) the cards read as flat
+dark rectangles — on a dark ground a blur has nothing visible to work with until
+the tint opens up. At 58% the mesh's colour shifts through the panes (warm on
+the left of a row, indigo on the right) and the contour field blurs behind them.
+
+| Check | Result |
+|---|---|
+| Contrast, all 7 routes, panel tints composited over the ground before judging | **0 failures** |
+| Frame time scrolling over the frosted surfaces | median 16.7 / p95 17.7 / **0 dropped, 0 long tasks** |
+
+`backdrop-filter` is dropped entirely under `prefers-reduced-motion` in favour of
+a 94% flat tint — the effect is decorative and it is the one property here that
+makes the compositor re-sample the whole area behind each pane.
+
+**Cascade trap:** `.glass` is declared after Tailwind's utilities, so its
+`border` shorthand beat `border-crimson` at equal specificity and the open
+pillar lost its crimson edge. The state colours now carry Tailwind's `!`
+modifier. Verified: open pillar `rgb(217, 97, 79)`, closed ones the glass
+hairline.
+
+Evidence: `evidence/rev-42-glass-schemes-1440.png`,
+`rev-43-glass-demo-1440.png`, `rev-48-glass-trifold-open-1440.png`,
+`rev-45-glass-join-1440.png`, `rev-47-glass-mobilenav-390.png`.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -864,3 +896,11 @@ Things that broke and how they were fixed. Do not repeat these.
 - **An angled gradient depends on the box's height.** Adding padding to fix the
   descender silently re-mapped which part of the ramp each glyph received. If a
   ramp should read consistently across a line, keep it at 90deg
+- **A utility declared after the framework wins at equal specificity.** `.glass`
+  set the `border` shorthand and silently beat every `border-<colour>` utility on
+  the same element, so selected states lost their accent edge. Component state
+  colours layered over a custom utility need `!` — or the utility should set only
+  the properties no state will ever want back
+- **Frosted glass needs something behind it to frost.** On a dark ground a
+  blurred panel at a high tint is indistinguishable from a flat panel; the effect
+  only appears once the tint is open enough to show the layers underneath

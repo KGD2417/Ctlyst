@@ -100,7 +100,7 @@ export function SchemeCards() {
           key={s.n}
           data-card
           tabIndex={0}
-          className={`@container relative border border-rule p-8 ${s.tinted ? "bg-paper-warm" : "bg-paper"}`}
+          className={`@container glass glass-lit relative p-8 ${s.tinted ? "bg-paper-warm/80" : ""}`}
         >
           {/* perimeter hairline, drawn on hover */}
           <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" preserveAspectRatio="none">

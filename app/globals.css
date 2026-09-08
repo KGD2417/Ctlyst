@@ -267,3 +267,39 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .grad-fill:hover {
   background: linear-gradient(135deg in oklch, var(--color-crimson), color-mix(in oklch, var(--color-indigo-deep) 34%, var(--color-crimson)));
 }
+
+/* ── frosted surfaces ──────────────────────────────────────────────
+   One utility rather than a blur value per component, so the whole set can be
+   tuned — or dropped for a device that cannot afford it — in one place.
+
+   `backdrop-filter` is the expensive part: each frosted surface makes the
+   compositor re-sample what is behind it. The saturate() is what stops the
+   blurred ground going grey and flat.
+
+   The tint is deliberately not 50%: the mesh gradient behind these panels is
+   what gives them their colour, but text still has to clear AA against the
+   brightest point of that mesh, which is what 72% buys. */
+.glass {
+  background: color-mix(in oklch, var(--color-paper-warm) 58%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid color-mix(in oklch, var(--color-ink) 18%, transparent);
+}
+
+/* The lit top edge that makes a pane read as glass rather than as a grey box. */
+.glass-lit { position: relative; isolation: isolate; }
+.glass-lit::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--color-ink) 28%, transparent), transparent);
+}
+
+/* Everything above costs GPU on a surface that is decorative. Where the device
+   asks for less motion we also spend less: a flat tint, no re-sampling. */
+@media (prefers-reduced-motion: reduce) {
+  .glass { -webkit-backdrop-filter: none; backdrop-filter: none;
+           background: color-mix(in oklch, var(--color-paper-warm) 94%, transparent); }
+}

@@ -219,8 +219,8 @@ export function TriFold() {
             data-cursor
             tabIndex={0}
             onFocus={() => focus(i)}
-            className={`overflow-hidden border p-8 transition-colors duration-[280ms] ${
-              open === i ? "border-crimson bg-paper-warm" : "border-rule bg-paper"
+            className={`glass glass-lit overflow-hidden p-8 transition-colors duration-[280ms] ${
+              open === i ? "border-crimson! bg-paper-warm/85" : ""
             }`}
           >
             {/* Fixed width: the copy is pinned to the compressed column so it

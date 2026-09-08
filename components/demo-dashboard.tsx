@@ -128,7 +128,7 @@ function Track({ title, steps }: { title: string; steps: Step[] }) {
 
 function Detail({ f }: { f: Founder }) {
   return (
-    <article className="border border-rule bg-paper p-8 md:p-10">
+    <article className="glass glass-lit p-8 md:p-10">
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <p className="t-mono-label text-muted">Case {f.id.toUpperCase()}</p>
@@ -257,7 +257,7 @@ export function DemoDashboard() {
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 md:px-8">
-      <div className="border border-ink bg-paper">
+      <div className="glass glass-lit">
         {/* ── window chrome ────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule bg-paper-warm px-5 py-3">
           <p className="t-mono-label text-ink">CTLYST · Operations Console</p>

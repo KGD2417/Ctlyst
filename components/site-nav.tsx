@@ -45,7 +45,7 @@ export function SiteNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-[120] border-b border-rule bg-paper/94 backdrop-blur-md">
+      <header className="glass sticky top-0 z-[120] border-x-0 border-t-0">
       <div className="t-mono-label border-b border-rule py-2 text-center text-muted">
         Mumbai · Maharashtra · Est. MMXXVI
       </div>
@@ -116,7 +116,7 @@ export function SiteNav() {
       <div
         id="mobile-nav"
         hidden={!open}
-        className="fixed inset-0 z-[110] flex flex-col items-center justify-center gap-9 bg-paper pt-24 md:hidden"
+        className="glass fixed inset-0 z-[110] flex flex-col items-center justify-center gap-9 border-0 bg-paper/92 pt-24 backdrop-blur-2xl md:hidden"
       >
         {ROUTES.map((r) => (
           <CurtainLink

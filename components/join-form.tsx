@@ -152,7 +152,7 @@ export function JoinForm() {
             {ROLES.map((r) => (
               <label
                 key={r.value}
-                className="group flex cursor-pointer items-start gap-3 border border-muted/50 bg-paper-warm/40 px-5 py-4 transition-colors duration-[280ms] has-[:checked]:border-crimson has-[:checked]:bg-paper-warm"
+                className="glass group flex cursor-pointer items-start gap-3 border-muted/50! px-5 py-4 transition-colors duration-[280ms] has-[:checked]:border-crimson! has-[:checked]:bg-paper-warm"
               >
                 <input
                   type="radio" name="role" value={r.value}
