@@ -560,6 +560,49 @@ entering the left edge must match those leaving the right. Verified to have teet
 — setting `scale` to a non-integer makes it fail with "2 contours enter the left
 edge but 6 leave the right".
 
+## Client revision · 2026-09-08d — clipped descenders, and the tri-fold flicker
+
+**Descenders.** SplitText's `mask: "lines"` wrapper is exactly one line box tall
+and clips; the display ramp runs `line-height: 0.92`, tighter than the font's own
+ascent + descent. Every descender was sliced at the baseline — worst on the
+italic *g* of "guidance". Fixed with `overflow-clip-margin: 0.3em` on
+`.sl-line-mask`, which widens the clip region without touching the box, plus the
+reveal's start offset raised 110% → 135% so a line still begins fully hidden
+inside the wider region.
+
+Measured, settled lines on the home hero: **20.6px of room below the ink**
+(previously clipped). Unrevealed lines still sit **8.1px below the clip edge**, so
+nothing peeks before its reveal. A sweep of all seven routes for text ink cut by
+any clipping ancestor returns **zero**. Evidence: `evidence/rev-18-hero-1440.png`.
+
+**Tri-fold flicker.** Reported as: left→right is fine, but middle→back-to-left
+flickers. Traced with a real pointer path and a per-frame recorder. Three
+distinct causes, in the order they were found:
+
+1. A layout animation *generates its own* enter/leave events — as the boxes
+   resize, the browser re-decides what is under the pointer. Captured: the grid
+   received `mouseleave` with the pointer at x=398 **inside its own box**, with
+   `relatedTarget` an `<h3>` inside the grid; and card 1 received `mouseenter`
+   while `elementFromPoint` said card 0. Hover now follows real pointer
+   *movement* (one `pointermove` on the grid, reading its own target).
+2. Pointer moves *during* a Flip land on different cards as the boxes slide, so
+   the state oscillated — eight reversals in one sweep. The running Flip now owns
+   the layout; the pointer's latest intent is queued and applied once, on
+   completion.
+3. **The last one was mine.** `queued.current = null` was written to mean "clear
+   the queue", but `null` is also the meaningful value "close everything". So
+   every pointer move over the already-open card queued a collapse that fired
+   when the Flip finished. `undefined` clears; `null` closes.
+
+| | Before | After |
+|---|---|---|
+| `open` through middle→left | 1 → 0 → 1 **in 15ms**, settling on the wrong card | 1 → 0, settles on the card under the pointer |
+| Quick reversals, full sweep | 8 | 0 |
+| Unrequested collapses to "none" | 3 | 0 |
+| Leaving the grid still closes | — | yes |
+
+Evidence: `evidence/rev-19-trifold-1440.png`.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -695,3 +738,23 @@ Things that broke and how they were fixed. Do not repeat these.
   2.03/4.11 multipliers exist to stop octaves aligning, but they also guarantee
   no octave completes a whole period across the field, so the seam never matches.
   Use 1/2/4 with different seeds per octave instead
+- **A line-height below 1 plus an overflow-hidden line mask eats every
+  descender.** SplitText's mask wrapper is exactly one line box tall, and the
+  display ramp is 0.92 — so g, y and p were cut at the baseline everywhere the
+  masked reveal was used. `overflow-clip-margin` fixes it without touching
+  layout, but the reveal's start offset must grow to match, or the line pokes
+  into the widened region at rest
+- **Never use `null` as both a sentinel and a value.** "Nothing queued" and
+  "close everything" were both `null` in the tri-fold's queue, so an ordinary
+  hover over the open card scheduled a collapse. It looked exactly like a browser
+  bug, and it cost most of the debugging session. `undefined` clears, `null` acts
+- **A hover-driven layout animation is a feedback loop.** Resizing boxes make the
+  browser re-run hit testing and emit enter/leave the user never caused; feeding
+  those back into the state that drives the resize oscillates. Drive such state
+  from pointer MOVEMENT, and let a running animation own the layout until it
+  settles
+- **`getBoundingClientRect` and `relatedTarget` both lie during a layout
+  animation, in different directions.** Coordinates said the pointer was inside;
+  relatedTarget pointed at a child; neither matched intent. `elementFromPoint`
+  against the *settled* layout is the only reading that answers the question
+  actually being asked

@@ -125,8 +125,18 @@ body {
    so page content is lifted into its own layer above. */
 main, footer { position: relative; z-index: 1; }
 
-/* SplitText line masks — the wrapper SplitText generates with mask:"lines" */
+/* SplitText line masks — the wrapper SplitText generates with mask:"lines".
+   The wrapper is exactly one line box tall and clips, and the display ramp runs
+   line-height 0.92 — tighter than the font's own ascent+descent. So every
+   descender (g, y, p, and the italic g of "guidance") was sliced off at the
+   baseline of its own line. `overflow-clip-margin` widens the clip region
+   without touching the box, so nothing reflows and the stacking is unchanged;
+   padding plus a negative margin would work too, but this needs no arithmetic
+   to stay in sync with the ramp.
+
+   The reveal's start offset is raised to compensate — see SplitLines. */
 .sl-line { display: block; }
+.sl-line-mask { overflow-clip-margin: 0.3em; }
 
 /* §9.6 misregistration: the crimson channel prints slightly out of register for
    the duration of the reveal, then snaps true. Two uses site-wide. */

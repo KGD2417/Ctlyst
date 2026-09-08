@@ -46,7 +46,10 @@ export function SplitLines({
       });
       gsap.set(node, { opacity: 1 });
       const tween = gsap.from(split.lines, {
-        yPercent: 110,
+        // 135, not 110: the mask now clips 0.3em outside its box so descenders
+        // survive, and a line starting only 10% below would already be poking
+        // into that margin at rest.
+        yPercent: 135,
         duration: 0.9,
         ease: "power4.out",
         stagger: 0.06,

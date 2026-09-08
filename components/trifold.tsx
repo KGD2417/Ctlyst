@@ -25,6 +25,20 @@ gsap.registerPlugin(Flip);
  *     it never re-wraps in any state, and the space the expansion frees is used
  *     to reveal a detail line instead.
  *
+ *  4. Hover was driven by per-card mouseenter and a grid mouseleave, and a
+ *     layout animation generates both of those on its own: as the boxes resize,
+ *     the browser recomputes what is under the pointer and fires enter/leave
+ *     even though the pointer has not moved. Traced from the middle card back to
+ *     the left one, the grid received mouseleave with the pointer at x=398,
+ *     inside its own box, with relatedTarget an <h3> INSIDE the grid; and card 1
+ *     received mouseenter while elementFromPoint said card 0. The state flipped
+ *     1 -> 0 -> 1 in 15ms and stuck on the wrong card.
+ *
+ *     So the open column now follows real pointer MOVEMENT — one pointermove on
+ *     the grid, reading its own target — and a leave whose relatedTarget is
+ *     still inside the grid is ignored. Events the animation invents carry no
+ *     movement, so they can no longer steer it.
+ *
  * INV-3 holds: Flip animates the layout, it is not a scale transform.
  */
 
@@ -60,7 +74,12 @@ export function TriFold() {
   const [open, setOpen] = useState<number | null>(null);
   const pending = useRef<Flip.FlipState | null>(null);
   const running = useRef<gsap.core.Timeline | null>(null);
+  const queued = useRef<number | null | undefined>(undefined);
   const reduced = useRef(false);
+  // Mirrors `open` for the callbacks that outlive a render — the Flip's
+  // onComplete fires after the state it closed over may have moved on. Written
+  // in the layout effect below, never during render.
+  const openRef = useRef<number | null>(null);
 
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -94,27 +113,85 @@ export function TriFold() {
     };
   }, []);
 
-  // Replay the captured layout AFTER React commits, before the browser paints.
-  useLayoutEffect(() => {
-    const state = pending.current;
-    pending.current = null;
-    if (!state) return;
-    running.current?.kill(); // never let two Flips fight over the same boxes
-    running.current = Flip.from(state, {
-      duration: 0.5,
-      ease: "power3.out",
-      nested: true,
-      // an in-flight Flip is interrupted cleanly rather than compounding
-      onComplete: () => { running.current = null; },
-    });
-  }, [open]);
+  /**
+   * The card under a real pointer move — read off the event's own target, so no
+   * layout is measured and no synthetic enter/leave can reach this.
+   *
+   * A point in the grid GAP returns the current column rather than null: the
+   * gaps belong to the grid, and treating them as "nothing" collapsed the row to
+   * equal thirds every time the pointer crossed one, which moved the boxes,
+   * which changed what was under the pointer.
+   */
+  const onPointerMove = (e: React.PointerEvent) => {
+    const card = (e.target as Element).closest("[data-pillar]");
+    if (!card) return;
+    const cards = [...(grid.current?.querySelectorAll("[data-pillar]") ?? [])];
+    focus(cards.indexOf(card));
+  };
 
+  /**
+   * Only close when the pointer is genuinely outside the grid — checked by
+   * COORDINATES, not by relatedTarget. Mid-Flip the browser emits leaves whose
+   * relatedTarget is an element inside the grid, and others where it is null;
+   * the first kind is easy to filter, the second is indistinguishable from
+   * leaving the window. The pointer's own position is unambiguous either way,
+   * and it is one rect read on an event that fires a handful of times.
+   */
+  const onPointerLeave = (e: React.PointerEvent) => {
+    const r = grid.current?.getBoundingClientRect();
+    if (r && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) return;
+    focus(null);
+  };
+
+  /**
+   * While a Flip is in flight the boxes are moving under the pointer, so every
+   * pointermove lands on a different card and the state oscillates — measured at
+   * eight reversals in one sweep. The animation owns the layout until it
+   * settles; the pointer's latest intent is queued and applied once, on
+   * completion. At most one transition is ever pending.
+   */
   const focus = (i: number | null) => {
-    if (i === open) return;
+    // `undefined` clears the queue; `null` MEANS "close everything". Using null
+    // for both made every pointer move over the already-open card queue a
+    // collapse, which fired when the Flip finished — the row snapped back to
+    // equal thirds half a second after each hover, which is most of what
+    // "flickers and glitches out" was.
+    if (i === openRef.current) { queued.current = undefined; return; }
+    if (running.current) { queued.current = i; return; }
     if (reduced.current || !grid.current) { setOpen(i); return; }
     pending.current = Flip.getState(grid.current.querySelectorAll("[data-pillar]"));
     setOpen(i);
   };
+
+  // Replay the captured layout AFTER React commits, before the browser paints.
+  useLayoutEffect(() => {
+    openRef.current = open;
+    const state = pending.current;
+    pending.current = null;
+    if (!state) return;
+    if (running.current) {
+      // kill() stops the tween but leaves the width/transform it was mid-way
+      // through writing, so the next Flip would measure a half-animated layout
+      // as its destination. The captured state already holds where the boxes
+      // visually ARE; the DOM has to hold where they are going.
+      running.current.kill();
+      gsap.set(grid.current?.querySelectorAll("[data-pillar]") ?? [], {
+        clearProps: "width,height,transform,translate,rotate,scale",
+      });
+    }
+    running.current = Flip.from(state, {
+      duration: 0.5,
+      ease: "power3.out",
+      nested: true,
+      onComplete: () => {
+        running.current = null;
+        // apply whatever the pointer asked for while the boxes were busy
+        const next = queued.current;
+        queued.current = undefined;
+        if (next !== undefined && next !== openRef.current) focus(next);
+      },
+    });
+  }, [open]);
 
   const cols =
     open === null
@@ -132,7 +209,8 @@ export function TriFold() {
         ref={grid}
         className="mt-12 grid gap-6 md:[grid-template-columns:var(--cols)]"
         style={{ ["--cols" as string]: cols }}
-        onMouseLeave={() => focus(null)}
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
       >
         {PILLARS.map((p, i) => (
           <article
@@ -140,7 +218,6 @@ export function TriFold() {
             data-pillar
             data-cursor
             tabIndex={0}
-            onMouseEnter={() => focus(i)}
             onFocus={() => focus(i)}
             className={`overflow-hidden border p-8 transition-colors duration-[280ms] ${
               open === i ? "border-crimson bg-paper-warm" : "border-rule bg-paper"
