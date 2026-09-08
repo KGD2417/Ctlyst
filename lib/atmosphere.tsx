@@ -24,6 +24,13 @@ import { dampFactor, changed } from "@/lib/damp";
 
 const DRIFT = { a: 47, b: 61, c: 73, d: 89 } as const; // seconds — all prime
 
+/** Fixed placements for the halftone masses (§9.5 — arrangement, never random). */
+const BLOBS = [
+  { left: "-6vw",  top: "6vh",   size: "44vw", opacity: 0.05,  drift: "b", amp: 14, reverse: false },
+  { left: "66vw",  top: "48vh",  size: "38vw", opacity: 0.042, drift: "c", amp: 18, reverse: true },
+  { left: "34vw",  top: "-14vh", size: "30vw", opacity: 0.035, drift: "d", amp: 12, reverse: true },
+] as const;
+
 const WASH: Record<string, string> = {
   "/why": "var(--color-crimson)",
   "/schemes": "var(--color-gold)",
@@ -60,6 +67,7 @@ export function Atmosphere() {
   const root = useRef<HTMLDivElement>(null);
   const layerC = useRef<SVGSVGElement>(null);
   const layerB = useRef<HTMLDivElement>(null);
+  const blobs = useRef<(HTMLDivElement | null)[]>([]);
 
   const all = arrangementFor(pathname);
   const [placements, setPlacements] = useState(all);
@@ -88,13 +96,21 @@ export function Atmosphere() {
     (async () => {
       const el = layerB.current;
       if (!el) return;
-      const { makeFibreTile, isLowEnd } = await import("@/lib/fibre");
+      const { makeFibreTile, makeDitherBlob, isLowEnd } = await import("@/lib/fibre");
       if (cancelled || !layerB.current) return;
+      const low = isLowEnd();
       // low-end still gets fibre, just a cheaper tile — never a flat white page
-      const tile = makeFibreTile(isLowEnd() ? 64 : 128, isLowEnd() ? 0.4 : 0.55);
+      const tile = makeFibreTile(low ? 64 : 128, low ? 0.4 : 0.55);
       if (cancelled || !layerB.current) return;
       layerB.current.style.backgroundImage = `url(${tile})`;
       layerB.current.style.backgroundRepeat = "repeat";
+
+      // Halftone blobs. Coarser cells and a smaller canvas on low-end hardware:
+      // the dither is a look, not a resolution, so it survives being cheap.
+      blobs.current.forEach((el, i) => {
+        if (!el) return;
+        el.style.backgroundImage = `url(${makeDitherBlob(low ? 256 : 512, low ? 8 : 6, i * 1.7)})`;
+      });
     })();
     return () => { cancelled = true; };
   }, []);
@@ -112,9 +128,12 @@ export function Atmosphere() {
         shapes.forEach((g) => {
           const secs = Number(g.dataset.driftSecs);
           const rev = g.dataset.reverse === "true";
+          // The guilloche wants a whisper (6%); the dither blobs are the moving
+          // element you are meant to notice, so they opt into a longer travel.
+          const amp = Number(g.dataset.driftAmp) || 6;
           gsap.to(g, {
-            xPercent: rev ? -6 : 6,
-            yPercent: rev ? 4 : -4,
+            xPercent: rev ? -amp : amp,
+            yPercent: rev ? amp * 0.66 : -amp * 0.66,
             rotation: rev ? -8 : 8,
             duration: secs,
             ease: "none",
@@ -187,6 +206,29 @@ export function Atmosphere() {
         style={{ willChange: "transform" }}
         data-fibre
       />
+
+      {/* B2 · dithered halftone blobs. Three fixed placements, drifting on the
+          same ticker-free GSAP loop as the guilloche. The third is desktop-only:
+          on a phone two masses already fill the frame. */}
+      {BLOBS.map((b, i) => (
+        <div
+          key={i}
+          data-drift
+          data-drift-secs={DRIFT[b.drift]}
+          data-drift-amp={b.amp}
+          data-reverse={b.reverse ? "true" : "false"}
+          className={`absolute ${i === 2 ? "hidden md:block" : ""}`}
+          style={{
+            left: b.left, top: b.top, width: b.size, height: b.size,
+            backgroundSize: "contain", backgroundRepeat: "no-repeat",
+            // The tile is upscaled to blob size; without this the browser
+            // smooths it and the halftone squares turn to grey mush.
+            imageRendering: "pixelated",
+            opacity: b.opacity, willChange: "transform",
+          }}
+          ref={(el) => { blobs.current[i] = el; }}
+        />
+      ))}
 
       {/* D · wash — per-route tint, 2% */}
       {WASH[pathname] && (

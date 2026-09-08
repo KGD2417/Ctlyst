@@ -19,23 +19,19 @@ export default function Home() {
   return (
     <main>
       {/* ── hero ─────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1180px] px-8 pb-24 pt-20 md:pt-28">
+      {/* Centred on its own axis, and carrying nothing but the claim and the two
+          doors. The lede that used to sit under the buttons now opens the page
+          proper, below — three stacked blocks under one headline read as clutter. */}
+      <section className="mx-auto max-w-[1180px] px-8 pb-20 pt-16 text-center md:pt-24">
         <h2 className="t-mono-label text-gold">Bridging the gap between ideas and execution</h2>
         {/* §9.6 misregistration — use 2 of 2 (the curtain numeral is use 1) */}
-        <SplitLines className="t-display-xl mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
+        <SplitLines className="t-display-xl mx-auto mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
           <>
             No good idea should fail for want of{" "}
             <em className="italic text-crimson">guidance.</em>
           </>
         </SplitLines>
-        <SplitLines className="t-lede mt-9 max-w-[620px]" delay={0.5} trigger={false}>
-          <>
-            CTLYST unites experienced mentors, hands-on technical help, and India&rsquo;s
-            under-used funding schemes into one hand-held journey — for the student founder
-            the system was never built to find.
-          </>
-        </SplitLines>
-        <div className="mt-12 flex flex-wrap gap-5">
+        <div className="mt-12 flex flex-wrap justify-center gap-5">
           <CurtainLink href="/join" className="t-mono-label border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
             Begin Your Journey
           </CurtainLink>
@@ -47,8 +43,18 @@ export default function Home() {
 
       <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
+      <section className="mx-auto max-w-[820px] px-8 pb-4 pt-6 text-center">
+        <SplitLines className="t-lede" delay={0.1}>
+          <>
+            CTLYST unites experienced mentors, hands-on technical help, and India&rsquo;s
+            under-used funding schemes into one hand-held journey — for the student founder
+            the system was never built to find.
+          </>
+        </SplitLines>
+      </section>
+
       {/* ── I · ecosystem in numbers ─────────────────────────────────── */}
-      <section className="mx-auto max-w-[1180px] px-8 py-16" aria-labelledby="numbers-heading">
+      <section className="mx-auto max-w-[1180px] px-8 py-12" aria-labelledby="numbers-heading">
         <h2 className="t-mono-label text-gold">I. The Ecosystem in Numbers</h2>
         <h2 id="numbers-heading" className="sr-only">The ecosystem in numbers</h2>
         <div className="mt-10 grid border-y border-ink sm:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +76,7 @@ export default function Home() {
       </section>
 
       {/* ── pull quote ───────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[820px] px-8 py-20 text-center">
+      <section className="mx-auto max-w-[820px] px-8 py-14 text-center">
         <p className="font-display text-5xl leading-none text-gold">&ldquo;</p>
         <blockquote className="t-display-m mt-2 italic">
           Dream is not that which you see while sleeping; it is something that does not let you sleep.
@@ -84,7 +90,7 @@ export default function Home() {
       <FourWalls />
 
       {/* ── insight band ─────────────────────────────────────────────── */}
-      <section data-invert className="my-16 bg-ink px-8 py-24 text-center text-paper">
+      <section data-invert className="my-10 bg-ink px-8 py-20 text-center text-paper">
         <h2 className="t-mono-label text-gold">The CTLYST Insight</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[24ch]">
           The resources India&rsquo;s founders need <em className="italic text-gold">already exist.</em>{" "}
@@ -105,7 +111,7 @@ export default function Home() {
       <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 
       {/* ── IV · the first step ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-[860px] px-8 py-24 text-center">
+      <section className="mx-auto max-w-[860px] px-8 py-20 text-center">
         <h2 className="t-mono-label text-gold">IV. The First Step</h2>
         <h2 className="t-display-m mx-auto mt-6 max-w-[22ch]">
           Your idea deserves more than a bookmark folder of schemes you never applied to.

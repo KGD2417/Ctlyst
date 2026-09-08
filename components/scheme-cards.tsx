@@ -38,6 +38,10 @@ const SCHEMES: Scheme[] = [
     body: <>State-level grants, incubation, and dedicated funds — including <strong>Maharashtra&rsquo;s</strong>, directly relevant to our Mumbai launch city and beyond.</> },
 ];
 
+/** Glyph count of the rendered figure — CountUp prints en-IN grouped digits. */
+const figureChars = (f: NonNullable<Scheme["figure"]>) =>
+  (f.prefix?.length ?? 0) + f.to.toLocaleString("en-IN").length;
+
 export function SchemeCards() {
   const scope = useGsapContext<HTMLDivElement>((_ctx, ref) => {
     const root = ref.current;
@@ -96,7 +100,7 @@ export function SchemeCards() {
           key={s.n}
           data-card
           tabIndex={0}
-          className={`relative border border-rule p-8 ${s.tinted ? "bg-paper-warm" : "bg-paper"}`}
+          className={`@container relative border border-rule p-8 ${s.tinted ? "bg-paper-warm" : "bg-paper"}`}
         >
           {/* perimeter hairline, drawn on hover */}
           <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" preserveAspectRatio="none">
@@ -105,14 +109,27 @@ export function SchemeCards() {
           </svg>
 
           <span className="t-mono-label text-gold">{s.n}</span>
+          {/* Fixed-height figure well, bottom-aligned. Three of the six schemes
+              have no rupee figure, so without a reserved well their titles sat a
+              hundred pixels above their neighbours' and the row read as broken
+              rather than as a grid. */}
+          <div className="mt-5 flex h-[7.5rem] flex-col justify-end">
           {s.figure && (
-            <p className="mt-5">
-              <span className="t-mono-data block leading-none">
+            <p>
+              {/* The figure is sized off the CARD, not the viewport. At the
+                  shared display size "₹10,000" is seven monospaced glyphs — wider
+                  than the column — and it printed straight out through the card's
+                  right edge. 0.62em is one IBM Plex Mono advance plus slack. */}
+              <span
+                className="t-mono-data block leading-none"
+                style={{ fontSize: `min(5rem, ${(100 / (figureChars(s.figure) * 0.62)).toFixed(1)}cqi)` }}
+              >
                 <CountUp to={s.figure.to} prefix={s.figure.prefix ?? ""} />
               </span>
               <span className="t-lede mt-1 block">{s.figure.unit}</span>
             </p>
           )}
+          </div>
           <h3 className="t-subhead mt-5">{s.title}</h3>
           <p className="mt-3 text-ink-soft">{s.body}</p>
         </article>

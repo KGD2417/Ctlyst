@@ -55,7 +55,10 @@ export function FourWalls() {
         scrollTrigger: {
           trigger: root,
           start: "top top",
-          end: () => "+=" + (slides - 1) * window.innerWidth,
+          // 0.55 of a viewport width per panel rather than a full one. The tween
+          // is mapped to the trigger's whole range either way, so the four
+          // panels still read at the same pace — the page is just less tall.
+          end: () => "+=" + (slides - 1) * window.innerWidth * 0.55,
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,

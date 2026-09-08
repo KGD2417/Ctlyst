@@ -172,3 +172,21 @@ main, footer { position: relative; z-index: 1; }
   );
   filter: blur(18px);
 }
+
+/* ── scrollbar · brand-tinted rather than hidden ───────────────────
+   Hiding it outright removes the only cue for how long the page is, which
+   matters on a document this tall. Standard properties first; the WebKit
+   pseudo-elements are the fallback for Safari, which still ignores them. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border: 3px solid var(--color-paper);   /* insets the thumb to a hairline bar */
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-gold); }
+::-webkit-scrollbar-corner { background: transparent; }

@@ -154,6 +154,97 @@ export const FOUNDERS: Founder[] = [
       { label: "Application support", state: "waiting", tag: "Manual" },
     ],
   },
+  {
+    id: "f-05",
+    name: "Imran S.",
+    venture: "Vernacular exam-prep audio for low-bandwidth phones",
+    city: "Aurangabad",
+    since: "Week 4",
+    statedNeed: "We need to be listed on an incubator's website.",
+    diagnosis:
+      "Distribution is already working — 900 weekly listeners with no spend. The constraint is unit economics: every listener costs more than they return.",
+    reframe: "Asked for legitimacy. Needed a costing model.",
+    mentor: {
+      name: "A. Bose",
+      background: "Retired power electronics lead, 26 years",
+      committed: "2 hrs / month",
+    },
+    mentorTrack: [
+      { label: "Matched", state: "done", tag: "Manual" },
+      { label: "Mentor accepted", state: "done", tag: "Manual" },
+      { label: "Engagement", state: "active", note: "Rebuilding the cost model", tag: "Manual" },
+      { label: "Milestone review", state: "waiting", tag: "Assisted" },
+    ],
+    capitalTrack: [
+      { label: "Eligibility screen", state: "done", note: "DPIIT recognition confirmed", tag: "Assisted" },
+      { label: "Scheme shortlist", state: "active", note: "State policy + AIM incubation", tag: "Assisted" },
+      { label: "Application support", state: "waiting", tag: "Manual" },
+    ],
+  },
+  {
+    id: "f-06",
+    name: "Neha B.",
+    venture: "Refill network for household cleaning liquids",
+    city: "Thane",
+    since: "Week 8",
+    statedNeed: "We need a grant to open three more refill points.",
+    diagnosis:
+      "The first point is not yet profitable. Funding replication before the unit works would multiply a loss, so the capital track is deliberately held.",
+    reframe: "Asked to scale. Needed the first site to pay for itself.",
+    mentor: {
+      name: "K. Iyer",
+      background: "Retired operations director, campus services",
+      committed: "2 hrs / month",
+    },
+    mentorTrack: [
+      { label: "Matched", state: "done", tag: "Manual" },
+      { label: "Mentor accepted", state: "done", tag: "Manual" },
+      { label: "Engagement", state: "done", note: "9 sessions", tag: "Manual" },
+      { label: "Milestone review", state: "active", note: "Site margin −₹8/unit → +₹3/unit", tag: "Assisted" },
+    ],
+    capitalTrack: [
+      { label: "Eligibility screen", state: "done", tag: "Assisted" },
+      {
+        label: "Scheme shortlist",
+        state: "blocked",
+        note: "Held until the first site clears break-even",
+        tag: "Manual",
+      },
+    ],
+  },
+  {
+    id: "f-07",
+    name: "Tanvi J.",
+    venture: "Sensor retrofit for municipal water pumps",
+    city: "Nagpur",
+    since: "Week 5",
+    statedNeed: "We need an introduction to the municipal corporation.",
+    diagnosis:
+      "The introduction is available. What is missing is a compliance file the buyer is required to ask for, which would end the conversation on day one.",
+    reframe: "Asked for a meeting. Needed the paperwork the meeting demands.",
+    alert: "Stalled at a milestone — compliance file 3 weeks overdue",
+    mentor: {
+      name: "S. Raghavan",
+      background: "Retired production engineer, 31 years in instrumentation",
+      committed: "4 hrs / month",
+    },
+    scheme: {
+      name: "Credit Guarantee Scheme",
+      ask: "Collateral-free working capital",
+      status: "On hold · terms being re-verified",
+    },
+    mentorTrack: [
+      { label: "Matched", state: "done", tag: "Manual" },
+      { label: "Mentor accepted", state: "done", tag: "Manual" },
+      { label: "Engagement", state: "blocked", note: "Compliance file outstanding", tag: "Manual" },
+      { label: "Milestone review", state: "waiting", tag: "Assisted" },
+    ],
+    capitalTrack: [
+      { label: "Eligibility screen", state: "done", tag: "Assisted" },
+      { label: "Scheme registry", state: "done", note: "Scheme terms 24 days old — re-verify", tag: "Assisted" },
+      { label: "Scheme shortlist", state: "waiting", tag: "Assisted" },
+    ],
+  },
 ];
 
 /** Closed loops. Success is a specific outcome, never "a connection made". */

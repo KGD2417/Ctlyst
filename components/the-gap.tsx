@@ -164,7 +164,7 @@ export function TheGap() {
         start: "top top",
         // Longer travel so even a fast flick spends enough frames inside the
         // pin for the close to read as inevitable rather than skipped.
-        end: "+=" + Math.round(window.innerHeight * 2.2),
+        end: "+=" + Math.round(window.innerHeight * 1.3),
         pin: true,
         anticipatePin: 1,
         // `animation` is here only so invalidateOnRefresh re-evaluates the

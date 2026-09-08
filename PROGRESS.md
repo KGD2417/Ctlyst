@@ -462,6 +462,35 @@ INV-7 ok · INV-8 ok
   `power3.out`. CustomEase would reproduce the exact brand cubic-bezier but costs ~3 KB,
   a fifth of the saving; PLAN §3 already sanctions `power3.out` as a brand ease
 
+## Client revision · 2026-09-08 (post-L8)
+
+Nine changes requested from screenshots. All verified at 1440 and 390 against
+`next dev`, plus a clean `next build` and `eslint`.
+
+| Change | Evidence |
+|---|---|
+| Nav wordmark centred, six links split 3/3 either side | `evidence/rev-2-home-1440.png`, `rev-7-home-390.png` |
+| Hero centred; the lede moved out of the hero to below the fleuron | same |
+| Cursor restyled: 7px dot + 44px hairline ring, ring scales 0.34→1.0 only | measured: ring layout 44px, `scale(0.34)`→`scale(1)`, dot never scaled |
+| Home scroll cut | 14,298px → 10,676px at 900px tall — **15.9 → 11.9 screens (−25%)** |
+| Scrollbar themed (thin, `--rule` thumb, gold on hover) | computed `scrollbar-width: thin`, `scrollbar-color: rgb(220,214,200) transparent` |
+| Model diagram rebuilt to the supplied layout | `evidence/rev-3-model-diagram.png` |
+| Schemes cards: figure fits its card, titles share a baseline | title tops per row `354/354/354` and `838/838/838`; ₹10,000 box 290px inside a 292px column |
+| /demo rebuilt as an operations console — tabs, search, status + city filters, status bar | `evidence/rev-6-demo-1440.png`, `rev-8-demo-390.png`; filter run: 7 all → 3 "needs attention" → 1 for "nashik" → empty state |
+| Animated dithered halftone field site-wide (Bayer 8×8, three drifting masses) | `evidence/rev-2-home-1440.png` |
+
+**INV-6 re-measured, not assumed:** first-load JS **222.5 KB before → 222.9 KB after**
+(same method, same viewport, previous commit built from a stash). The whole revision
+costs 0.4 KB; the halftone tiles are generated on a canvas at runtime inside the
+already-dynamic `lib/fibre` import, so they never enter the bundle.
+
+Invariants: the blobs ride the *existing* guilloche drift loop inside the same
+`gsap.context` (INV-1) behind the same `prefers-reduced-motion` guard (INV-2), and only
+`transform`/`opacity` are written (INV-3). The cursor's reduced-motion and coarse-pointer
+teardown is unchanged. **The L2 cursor evidence is superseded** — "scale 1.00 → 2.60" no
+longer describes the cursor; that 2.6× upscale of a 12px raster *was* the reported
+pixelation.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -560,3 +589,14 @@ Things that broke and how they were fixed. Do not repeat these.
 - **React 19's lint rejects synchronous `setState` inside an effect.** For anything that is
   really an external store (`matchMedia`, a media query, a subscription),
   `useSyncExternalStore` is the primitive that both satisfies the rule and hydrates cleanly
+- **A promoted layer is rasterised once at its layout size.** Scaling a 12px dot to 2.6×
+  hands the GPU a 12px bitmap to stretch, which is the soft, crawling edge users report as
+  "pixels get weird when enlarged" — and it only shows on some machines because
+  fractional-DPR displays resample it a second time. Lay the element out at its LARGEST
+  size and scale down; never up
+- **A card whose content is optional needs a reserved well.** Three of six scheme cards
+  have no rupee figure, so their titles sat ~100px above their neighbours' and the grid
+  read as "not centred". A fixed-height, bottom-aligned figure well fixes the row
+- **Viewport-sized display type overflows a grid column.** `clamp(…, 6vw, 5rem)` is sized
+  for the page, not the card: "₹10,000" is seven monospaced glyphs and printed straight
+  out through the card's right edge. Size figures in `cqi` against the card instead

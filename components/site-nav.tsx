@@ -6,6 +6,11 @@ import { CurtainLink } from "@/lib/curtain";
 import { ROUTES } from "@/lib/routes";
 import { Wordmark } from "@/lib/wordmark";
 
+// Six links either side of a centred wordmark. Join stays last in the tab order.
+const NAV = ROUTES.slice(1);
+const LEFT = NAV.slice(0, 3);
+const RIGHT = NAV.slice(3);
+
 export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -45,21 +50,38 @@ export function SiteNav() {
         Mumbai · Maharashtra · Est. MMXXVI
       </div>
 
-      <nav className="mx-auto flex max-w-[1280px] items-center justify-between gap-6 px-6 py-4 lg:px-8">
+      <nav className="mx-auto grid max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-6 px-6 py-4 lg:px-8">
+        {/* left half of the nav — hidden on mobile, where the panel takes over */}
+        <ul className="hidden items-center gap-5 md:flex lg:gap-7">
+          {LEFT.map((r) => (
+            <li key={r.href}>
+              <CurtainLink
+                href={r.href}
+                aria-current={pathname === r.href ? "page" : undefined}
+                className={linkClass(r.href)}
+              >
+                {r.label}
+              </CurtainLink>
+            </li>
+          ))}
+        </ul>
+
         {/* The font-size lives on this anchor, not on <Wordmark>: the preloader's
-            Flip reads it off this element to land the handoff exactly on it. */}
+            Flip reads it off this element to land the handoff exactly on it.
+            Centred by the grid's auto middle column, so the two link groups
+            balance around it rather than pushing it off-axis. */}
         <CurtainLink
           href="/"
           data-navmark
-          className="block text-[1.5rem] text-ink"
+          className="col-start-2 block justify-self-center text-[1.5rem] text-ink"
           aria-label="CTLYST — home"
         >
           <Wordmark />
         </CurtainLink>
 
-        {/* desktop */}
-        <ul className="hidden items-center gap-5 md:flex lg:gap-7">
-          {ROUTES.slice(1).map((r) => (
+        {/* right half + the CTA */}
+        <ul className="hidden items-center justify-end gap-5 md:flex lg:gap-7">
+          {RIGHT.map((r) => (
             <li key={r.href}>
               <CurtainLink
                 href={r.href}
@@ -79,7 +101,7 @@ export function SiteNav() {
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="border border-rule px-3 py-2.5 md:hidden"
+          className="col-start-3 justify-self-end border border-rule px-3 py-2.5 md:hidden"
         >
           <span className={`block h-px w-5 bg-ink transition-transform duration-[280ms] ${open ? "translate-y-[6px] rotate-45" : ""}`} />
           <span className={`my-[5px] block h-px w-5 bg-ink transition-opacity duration-[280ms] ${open ? "opacity-0" : ""}`} />
