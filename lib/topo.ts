@@ -22,22 +22,34 @@ function hash(x: number, y: number, seed: number) {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
 }
 
-function valueNoise(x: number, y: number, seed: number) {
+/**
+ * `wrap` makes the lattice periodic in x, so the field tiles seamlessly and can
+ * be panned forever instead of yoyo-ing. Without it the only honest options are
+ * a reversing drift or a visible seam.
+ */
+function valueNoise(x: number, y: number, seed: number, wrap: number) {
   const xi = Math.floor(x), yi = Math.floor(y);
+  const wx = (i: number) => ((i % wrap) + wrap) % wrap;
   const u = SMOOTH(x - xi), v = SMOOTH(y - yi);
   return LERP(
-    LERP(hash(xi, yi, seed), hash(xi + 1, yi, seed), u),
-    LERP(hash(xi, yi + 1, seed), hash(xi + 1, yi + 1, seed), u),
+    LERP(hash(wx(xi), yi, seed), hash(wx(xi + 1), yi, seed), u),
+    LERP(hash(wx(xi), yi + 1, seed), hash(wx(xi + 1), yi + 1, seed), u),
     v,
   );
 }
 
-/** Three octaves — one is too smooth to read as terrain, four adds noise, not detail. */
-function fbm(x: number, y: number, seed: number) {
+/**
+ * Three octaves — one is too smooth to read as terrain, four adds noise, not
+ * detail. Frequencies are exactly 1/2/4 rather than the usual irrational-ish
+ * 2.03/4.11: each octave has to complete a whole number of periods across the
+ * field or the seam stops matching. Separate seeds keep the octaves from
+ * stacking their extremes the way aligned frequencies otherwise would.
+ */
+function fbm(x: number, y: number, seed: number, wrap: number) {
   return (
-    valueNoise(x, y, seed) * 0.6 +
-    valueNoise(x * 2.03, y * 2.03, seed + 1) * 0.28 +
-    valueNoise(x * 4.11, y * 4.11, seed + 2) * 0.12
+    valueNoise(x, y, seed, wrap) * 0.6 +
+    valueNoise(x * 2, y * 2, seed + 1, wrap * 2) * 0.28 +
+    valueNoise(x * 4, y * 4, seed + 2, wrap * 4) * 0.12
   );
 }
 
@@ -48,7 +60,8 @@ export type TopoOptions = {
   /** Sampling grid. Finer means smoother contours and more segments. */
   cols?: number;
   rows?: number;
-  /** Noise frequency: higher = more, tighter basins. */
+  /** Noise frequency: higher = more, tighter basins. Must be a whole number —
+   *  it is also the wrap period that makes the field tile in x. */
   scale?: number;
   /** Number of contour bands. */
   levels?: number;
@@ -66,7 +79,9 @@ export function makeTopoPaths({
   const f = new Float32Array((cols + 1) * (rows + 1));
   for (let j = 0; j <= rows; j++) {
     for (let i = 0; i <= cols; i++) {
-      f[j * (cols + 1) + i] = fbm((i / cols) * scale, (j / rows) * scale * (height / width), seed);
+      // x spans exactly one wrap period, so the column at i = cols is the column
+      // at i = 0 and the field's right edge meets its own left edge.
+      f[j * (cols + 1) + i] = fbm((i / cols) * scale, (j / rows) * scale * (height / width), seed, scale);
     }
   }
   // Normalise to the field's own range. Summed value noise clusters hard around

@@ -29,6 +29,23 @@ check(Math.min(...ys) >= 0 && Math.max(...ys) <= H, "a segment fell outside the 
 check(makeTopoPaths({ width: W, height: H })[0] === paths[0], "field is not deterministic between calls");
 check(ms < 40, `field build too slow to hide in one idle callback: ${ms.toFixed(1)}ms`);
 
+// The seam. The field is panned by exactly one width on repeat, so a contour
+// arriving at the right edge must leave the left edge at the same height — this
+// is the one property that turns into a visible vertical tear if it regresses.
+const edgeYs = (d: string, edge: number) =>
+  [...d.matchAll(/[ML](-?\d+\.\d+) (-?\d+\.\d+)/g)]
+    .filter((m) => Math.abs(Number(m[1]) - edge) < 0.05)
+    .map((m) => +Number(m[2]).toFixed(1))
+    .sort((a, b) => a - b);
+
+paths.forEach((d, i) => {
+  const left = edgeYs(d, 0);
+  const right = edgeYs(d, W);
+  check(left.length === right.length, `level ${i}: ${left.length} contours enter the left edge but ${right.length} leave the right`);
+  check(left.every((y, k) => Math.abs(y - right[k]) < 1), `level ${i}: seam heights differ — the field no longer tiles`);
+});
+check(paths.some((d) => edgeYs(d, 0).length > 0), "no contour touches the edges at all — the seam check is vacuous");
+
 console.log({ levels: paths.length, segments, buildMs: +ms.toFixed(1), pathKB: +(paths.join("").length / 1024).toFixed(1) });
 if (fail.length) { fail.forEach((f) => console.error("FAIL:", f)); process.exit(1); }
 console.log("topo: ok");

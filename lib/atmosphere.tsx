@@ -10,10 +10,8 @@ import { dampFactor, changed } from "@/lib/damp";
  * Ambient background (§9). Five layers:
  *   A base    — --paper, painted on <body>
  *   B fibre   — grain, dynamically imported (see FibreLayer), 0.05× parallax
- *   B2 halftone — dithered masses, drifting
  *   C guilloche — ONE <svg>, 0.15× parallax, continuous drift, pointer lerp
- *   C2 grid + topo — a 48px rule grid under drifting contour lines
- *   C3 flow    — long curves whose dash travels along them
+ *   C2 grid + topo — a 48px rule grid under a contour field panning forever
  *   D wash    — per-route tint
  *   F vignette — radial edge hold
  *
@@ -27,47 +25,8 @@ import { dampFactor, changed } from "@/lib/damp";
 
 const DRIFT = { a: 47, b: 61, c: 73, d: 89 } as const; // seconds — all prime
 
-/** Fixed placements for the halftone masses (§9.5 — arrangement, never random). */
-const BLOBS = [
-  { left: "-6vw",  top: "6vh",   size: "44vw", opacity: 0.03,  drift: "b", amp: 14, reverse: false },
-  { left: "66vw",  top: "48vh",  size: "38vw", opacity: 0.024, drift: "c", amp: 18, reverse: true },
-] as const;
-
 /** Contour field, in its own user-unit box. Built once on the client (~8ms). */
 const TOPO_BOX = { w: 2200, h: 1500 };
-
-/**
- * The flowing curve family, from the reference's generator: 18 copies of one
- * cubic, each stepped by index. `pathLength` normalises every path so a single
- * dash tween drives all of them regardless of their real arc length.
- *
- * It is 1000 and not 1 because GSAP rounds stroke-dashoffset to whole numbers:
- * normalised to 1, the entire animation range was [0, -1] and quantised to two
- * states, so the tween ran (progress climbed) while the curves sat perfectly
- * still. At 1000 a whole unit is a thousandth of the cycle.
- */
-const FLOW_CYCLE = 1000;
-// A wider step and a wider box than the reference's: its 696×316 crop puts most
-// of the fan off-canvas, which on a full page reads as a smudge in one corner
-// rather than as curves crossing the field.
-const FLOW_BOX = { x: -430, y: -260, w: 1180, h: 820 };
-const FLOW = Array.from({ length: 18 }, (_, i) => {
-  // Signs are computed, not spliced into the template. The reference writes
-  // `M-${380 - k}`, which emits "M--10" the moment that term goes negative —
-  // and widening the step is exactly what pushes it negative.
-  const k = i * 26;
-  const v = i * 12;
-  const x0 = -(380 - k), y0 = -(189 + v);
-  const x1 = -(312 - k), y1 = 216 - v;
-  const x2 = 152 - k,    y2 = 343 - v;
-  const x3 = 616 - k,    y3 = 470 - v;
-  const x4 = 684 - k,    y4 = 875 - v;
-  return {
-    d: `M${x0} ${y0}C${x0} ${y0} ${x1} ${y1} ${x2} ${y2}C${x3} ${y3} ${x4} ${y4} ${x4} ${y4}`,
-    width: 0.5 + i * 0.06,
-    dur: 26 + (i % 7) * 3.5, // co-prime-ish spread, so the family never pulses in unison
-  };
-});
 
 const WASH: Record<string, string> = {
   "/why": "var(--color-crimson)",
@@ -105,7 +64,6 @@ export function Atmosphere() {
   const root = useRef<HTMLDivElement>(null);
   const layerC = useRef<SVGSVGElement>(null);
   const layerB = useRef<HTMLDivElement>(null);
-  const blobs = useRef<(HTMLDivElement | null)[]>([]);
 
   const [topo, setTopo] = useState<string[]>([]);
 
@@ -136,7 +94,7 @@ export function Atmosphere() {
     (async () => {
       const el = layerB.current;
       if (!el) return;
-      const { makeFibreTile, makeDitherBlob, isLowEnd } = await import("@/lib/fibre");
+      const { makeFibreTile, isLowEnd } = await import("@/lib/fibre");
       if (cancelled || !layerB.current) return;
       const low = isLowEnd();
       // low-end still gets fibre, just a cheaper tile — never a flat white page
@@ -144,13 +102,6 @@ export function Atmosphere() {
       if (cancelled || !layerB.current) return;
       layerB.current.style.backgroundImage = `url(${tile})`;
       layerB.current.style.backgroundRepeat = "repeat";
-
-      // Halftone blobs. Coarser cells and a smaller canvas on low-end hardware:
-      // the dither is a look, not a resolution, so it survives being cheap.
-      blobs.current.forEach((el, i) => {
-        if (!el) return;
-        el.style.backgroundImage = `url(${makeDitherBlob(low ? 256 : 512, low ? 8 : 6, i * 1.7)})`;
-      });
 
       // Contour field. Marching squares over ~12k samples costs one frame, and
       // measured as a 56ms long task when it ran during mount — so it waits for
@@ -201,17 +152,17 @@ export function Atmosphere() {
         });
       }
 
-      // ── C3 · the dash travelling along each curve ────────────────────────
-      // Every path carries pathLength="1", so one normalised tween drives the
-      // whole family. stroke-dashoffset is the same mechanism DrawSVG already
-      // uses on this site; INV-3's ban is on layout properties, not on dash.
+      // ── C2 · the contour field, panning forever ──────────────────────────
+      // The field is periodic in x and drawn twice side by side, so translating
+      // it by exactly one field width and repeating lands copy B where copy A
+      // began. That is a genuinely continuous pan rather than a drift that
+      // creeps out and reverses — which is what "always animated" has to mean
+      // for a background you sit in front of.
       if (!reduced.matches) {
-        gsap.utils.toArray<SVGPathElement>("[data-flow]").forEach((path) => {
-          gsap.fromTo(path,
-            { strokeDashoffset: 0 },
-            { strokeDashoffset: -FLOW_CYCLE, duration: Number(path.dataset.dur), ease: "none", repeat: -1 },
-          );
-        });
+        // 2200 user units over 110s ≈ 16px/s on a 1440 viewport: slow enough to
+        // stay background, fast enough that the page is visibly alive if you
+        // look at it for a moment.
+        gsap.to("[data-topo-pan]", { x: -TOPO_BOX.w, duration: 110, ease: "none", repeat: -1 });
       }
 
       // ── scroll parallax + pointer lerp, both on the ticker ───────────────
@@ -277,29 +228,6 @@ export function Atmosphere() {
         data-fibre
       />
 
-      {/* B2 · dithered halftone blobs. Three fixed placements, drifting on the
-          same ticker-free GSAP loop as the guilloche. The third is desktop-only:
-          on a phone two masses already fill the frame. */}
-      {BLOBS.map((b, i) => (
-        <div
-          key={i}
-          data-drift
-          data-drift-secs={DRIFT[b.drift]}
-          data-drift-amp={b.amp}
-          data-reverse={b.reverse ? "true" : "false"}
-          className="absolute"
-          style={{
-            left: b.left, top: b.top, width: b.size, height: b.size,
-            backgroundSize: "contain", backgroundRepeat: "no-repeat",
-            // The tile is upscaled to blob size; without this the browser
-            // smooths it and the halftone squares turn to grey mush.
-            imageRendering: "pixelated",
-            opacity: b.opacity, willChange: "transform",
-          }}
-          ref={(el) => { blobs.current[i] = el; }}
-        />
-      ))}
-
       {/* C2a · the 48px rule grid. Static CSS gradients — no element per line,
           nothing to animate, and it is what reads as "instrument" under the
           contours rather than as decoration. */}
@@ -317,45 +245,25 @@ export function Atmosphere() {
       {/* C2b · contour lines. Baked once, then only translated — the reference
           shader animates by panning its noise field, which is the same thing. */}
       <svg
-        data-drift
-        data-drift-secs={DRIFT.a}
-        data-drift-amp={4}
-        data-reverse="false"
         viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
         preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-[-14%] h-[128%] w-[128%]"
-        style={{ willChange: "transform" }}
+        className="absolute inset-[-6%] h-[112%] w-[112%]"
       >
-        <g fill="none" stroke="var(--color-ink)" strokeWidth="1" vectorEffect="non-scaling-stroke">
-          {topo.map((d, i) => (
-            // Bands nearer the middle of the field carry more weight, so the set
-            // reads as terrain with a ridge line rather than as one flat hatch.
-            <path key={i} d={d} opacity={(0.14 - Math.abs(topo.length / 2 - i) * 0.012).toFixed(3)} vectorEffect="non-scaling-stroke" />
-          ))}
-        </g>
-      </svg>
-
-      {/* C3 · flowing curves */}
-      <svg
-        viewBox={`${FLOW_BOX.x} ${FLOW_BOX.y} ${FLOW_BOX.w} ${FLOW_BOX.h}`}
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 h-full w-full"
-        style={{ willChange: "opacity" }}
-      >
-        <g fill="none" stroke="var(--color-ink)">
-          {FLOW.map((p, i) => (
-            <path
-              key={i}
-              data-flow
-              data-dur={p.dur}
-              d={p.d}
-              pathLength={FLOW_CYCLE}
-              strokeDasharray={`${FLOW_CYCLE * 0.22} ${FLOW_CYCLE * 0.78}`}
-              strokeWidth={p.width}
-              strokeOpacity={0.05 + i * 0.004}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
+        <g data-topo-pan style={{ willChange: "transform" }}>
+          {/* The field is drawn once and <use>d for the second copy, one field
+              width along. Rendering both copies as real paths doubled 3.5k
+              segments of DOM and put a 50ms task back on the load path. */}
+          <g id="topo-field" fill="none" stroke="var(--color-ink)" strokeWidth="1"
+             vectorEffect="non-scaling-stroke">
+            {topo.map((d, i) => (
+              // Bands nearer the middle of the field carry more weight, so the
+              // set reads as terrain with a ridge rather than as one flat hatch.
+              <path key={i} d={d} opacity={(0.15 - Math.abs(topo.length / 2 - i) * 0.012).toFixed(3)}
+                    vectorEffect="non-scaling-stroke" />
+            ))}
+          </g>
+          {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
+          <use href="#topo-field" x={TOPO_BOX.w} />
         </g>
       </svg>
 

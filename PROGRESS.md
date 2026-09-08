@@ -533,6 +533,33 @@ DrawSVG already uses here (INV-3). The halftone masses were dialled down from
 0.05/0.042/0.035 to 0.03/0.024 and reduced from three to two — four ambient
 systems at full strength was soup. That is a knob, not a decision.
 
+## Client revision · 2026-09-08c — one background, always moving
+
+"Too much — either topography or the other style, but I need it always animated."
+Topography kept (it was the original reference); **the flow curves, the halftone
+masses and the halftone generator are deleted**, and the guilloche is halved to
+0.26 so two families of faint curves stop competing. What remains: paper, grain,
+a 48px rule grid, the contour field, wash, vignette.
+
+**Always animated, properly:** the field is now periodic in x — every octave
+completes a whole number of periods across it — drawn once and `<use>`d one field
+width along, then panned by exactly that width on `repeat: -1`. Copy B lands
+where copy A began, so it is a continuous pan, not a drift that creeps out and
+reverses. 2200 units / 110s ≈ 16px/s at 1440.
+
+| Measure | Baseline (pre-revision) | Now |
+|---|---|---|
+| Frame time scrolling, from load | median 16.7 / p95 17.9 / 0 dropped / 0 long tasks | median 16.7 / p95 18.4 / **0 dropped / 0 long tasks** |
+| First-load JS | 222.5 KB | **223.1 KB** (budget 250) |
+
+Evidence: `evidence/rev-14-topo-only-1440.png`, `evidence/rev-15-topo-seam-1440.png`
+(a different pan phase, no tear at the tile boundary), `evidence/rev-16-topo-390.png`.
+
+`lib/topo.check.ts` now asserts the seam: for every contour level, the heights
+entering the left edge must match those leaving the right. Verified to have teeth
+— setting `scale` to a non-integer makes it fail with "2 contours enter the left
+edge but 6 leave the right".
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -656,3 +683,15 @@ Things that broke and how they were fixed. Do not repeat these.
   that splice a minus sign in front of an expression are a latent crash — they
   work only for the parameter range the author happened to try. Compute the
   number, let the sign fall out
+- **GSAP writes SVG transforms to the `transform` ATTRIBUTE, not to `style`.**
+  Reading `el.style.transform` to check whether a pan was running reported an
+  empty string on a tween that was demonstrably active — the second time in this
+  session that "the animation is dead" turned out to be a bad observation rather
+  than a bad animation. Read `getAttribute("transform")` or `getCTM()`
+- **Two real copies of a big generated SVG is twice the DOM, and it shows.** The
+  duplicate contour field (3.5k segments) put a 50ms long task back on the load
+  path; `<use href="#id">` renders the same picture with one copy of the geometry
+- **A tileable noise field needs integer octave frequencies.** The usual
+  2.03/4.11 multipliers exist to stop octaves aligning, but they also guarantee
+  no octave completes a whole period across the field, so the seam never matches.
+  Use 1/2/4 with different seeds per octave instead

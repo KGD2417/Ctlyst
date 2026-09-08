@@ -64,7 +64,9 @@
 
   /* ── layer C weight · PLAN §4.1 amendment to §9.2 ─────────────── */
   --guilloche-stroke:  1.25px;
-  --guilloche-opacity: 0.5;
+  /* Halved once the contour field arrived: two families of faint curves at the
+     same weight read as clutter rather than as depth. */
+  --guilloche-opacity: 0.26;
 
   /* ── misregistration (§9.6) · two uses across the whole site ──── */
   --misreg: 3px;
