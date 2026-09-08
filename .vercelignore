@@ -1,0 +1,14 @@
+# Build-process records and source documents — not part of the deployed site.
+# Without this the CLI uploads 25MB of screenshots on every deploy, which is
+# most of the deploy time and none of the site.
+evidence/
+design/
+reference/
+BRIEF.md
+PLAN.md
+PROGRESS.md
+
+# Never useful to upload; Vercel rebuilds these.
+node_modules/
+.next/
+.data/
