@@ -78,7 +78,7 @@ export function Timeline() {
             </svg>
             <p className="t-mono-label text-gold">
               <span className="text-crimson">{String(i + 1).padStart(2, "0")}</span>
-              <span className="px-3 text-rule">/</span>
+              <span className="px-3 text-muted">/</span>
               {s.when}
             </p>
             <h3 className="t-subhead mt-3">{s.title}</h3>

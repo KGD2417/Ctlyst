@@ -28,7 +28,7 @@ export default function SchemesPage() {
         </p>
       </section>
 
-      <section data-invert className="my-12 bg-ink px-8 py-24 text-center text-paper">
+      <section className="my-12 band px-8 py-24 text-center text-ink">
         <h2 className="t-mono-label text-gold">Why This Page Exists</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Awareness of these schemes remains uneven —{" "}
@@ -58,7 +58,7 @@ export default function SchemesPage() {
       </section>
 
       <section className="px-8 py-20 text-center">
-        <CurtainLink href="/join" className="t-mono-label inline-block border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
+        <CurtainLink href="/join" className="t-mono-label inline-block grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
           Find the Scheme You Qualify For
         </CurtainLink>
       </section>

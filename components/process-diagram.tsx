@@ -134,7 +134,7 @@ export function ProcessDiagram() {
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[900px]" role="img"
                aria-label="The CTLYST operating model: founder and mentor intake pipelines feeding a human diagnosis step, then parallel mentor and capital tracks with explicit failure states, terminating in an outcome ledger.">
             {/* edges */}
-            <g fill="none" stroke="var(--color-rule)" strokeWidth="1.5">
+            <g fill="none" stroke="color-mix(in srgb, var(--color-ink) 26%, transparent)" strokeWidth="1.5">
               {EDGES.map((e, i) => (
                 <path key={i} data-draw d={e.d} strokeDasharray={e.dashed ? "5 5" : undefined} />
               ))}

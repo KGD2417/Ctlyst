@@ -35,7 +35,7 @@ export function SiteNav() {
     }
     if (href === "/join") {
       return `t-mono-label border px-4 py-2.5 whitespace-nowrap transition-colors duration-[280ms] lg:px-5 ${
-        active ? "border-crimson bg-crimson text-paper" : "border-ink text-ink hover:bg-ink hover:text-paper"
+        active ? "grad-fill border-crimson/60 text-ink" : "border-ink-soft text-ink hover:border-crimson hover:text-crimson"
       }`;
     }
     return `t-mono-label whitespace-nowrap border-b pb-1 transition-colors duration-[280ms] ${

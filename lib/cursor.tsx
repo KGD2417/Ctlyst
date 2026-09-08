@@ -68,7 +68,6 @@ export function CustomCursor() {
         const t = e.target as Element | null;
         if (!t || typeof t.closest !== "function") return;
         targetOpen = t.closest("a,button,input,select,textarea,[data-cursor]") ? 1 : 0;
-        el.dataset.invert = t.closest("[data-invert]") ? "true" : "false";
       };
 
       let lastX = NaN, lastY = NaN, lastO = NaN;
@@ -125,8 +124,7 @@ export function CustomCursor() {
     <div
       ref={wrap}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[150] grid place-items-center opacity-0
-                 data-[invert=true]:text-paper text-ink"
+      className="pointer-events-none fixed left-0 top-0 z-[150] grid place-items-center opacity-0 text-ink"
       style={{ width: RING, height: RING, willChange: "transform" }}
     >
       <div

@@ -80,8 +80,8 @@ function Bleed({ progress }: { progress: React.RefObject<number> }) {
     () => ({
       uProgress: { value: 0 },
       uTime: { value: 0 },
-      uInk: { value: new THREE.Color("#7B2D26") },
-      uPaper: { value: new THREE.Color("#FDFCF9") },
+      uInk: { value: new THREE.Color("#D9614F") },   // --crimson, lifted for the dark ground
+      uPaper: { value: new THREE.Color("#0B0A0E") },  // --paper, now the ground
     }),
     [],
   );

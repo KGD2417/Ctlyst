@@ -28,11 +28,11 @@ export default function Home() {
         <SplitLines className="t-display-xl mx-auto mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
           <>
             No good idea should fail for want of{" "}
-            <em className="italic text-crimson">guidance.</em>
+            <em className="italic grad-text">guidance.</em>
           </>
         </SplitLines>
         <div className="mt-12 flex flex-wrap justify-center gap-5">
-          <CurtainLink href="/join" className="t-mono-label border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
+          <CurtainLink href="/join" className="t-mono-label grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
             Begin Your Journey
           </CurtainLink>
           <CurtainLink href="/model" className="t-mono-label border border-ink px-9 py-4 text-ink transition-colors duration-[280ms] hover:bg-ink hover:text-paper">
@@ -90,14 +90,14 @@ export default function Home() {
       <FourWalls />
 
       {/* ── insight band ─────────────────────────────────────────────── */}
-      <section data-invert className="my-10 bg-ink px-8 py-20 text-center text-paper">
+      <section className="my-10 band px-8 py-20 text-center text-ink">
         <h2 className="t-mono-label text-gold">The CTLYST Insight</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[24ch]">
           The resources India&rsquo;s founders need <em className="italic text-gold">already exist.</em>{" "}
           What is missing is the one trusted place that connects the right resource to the right
           founder — <em className="italic text-gold">at the right time.</em>
         </h2>
-        <CurtainLink href="/why" className="t-mono-label mt-10 inline-block border border-paper px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-paper hover:text-ink">
+        <CurtainLink href="/why" className="t-mono-label mt-10 inline-block border border-ink px-9 py-4 text-ink transition-colors duration-[280ms] hover:bg-ink hover:text-paper">
           Why We Are That Place
         </CurtainLink>
       </section>
@@ -120,7 +120,7 @@ export default function Home() {
           Tell us what you are building and where you are stuck. We diagnose the real bottleneck,
           match you to a mentor who has solved it before, and walk with you until the loop is closed.
         </p>
-        <CurtainLink href="/join" className="t-mono-label mt-10 inline-block border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
+        <CurtainLink href="/join" className="t-mono-label mt-10 inline-block grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
           Apply as a Founder
         </CurtainLink>
       </section>

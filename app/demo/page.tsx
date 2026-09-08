@@ -34,7 +34,7 @@ export default function DemoPage() {
         <DemoDashboard />
       </section>
 
-      <section data-invert className="mt-8 bg-ink px-8 py-20 text-center text-paper">
+      <section className="mt-8 band px-8 py-20 text-center text-ink">
         <p className="t-mono-label text-gold">What this page is for</p>
         <h2 className="t-display-m mx-auto mt-7 max-w-[26ch]">
           A founder can be told how the loop works. An institution would rather{" "}

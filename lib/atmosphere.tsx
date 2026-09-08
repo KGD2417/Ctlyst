@@ -228,6 +228,26 @@ export function Atmosphere() {
         data-fibre
       />
 
+      {/* B3 · the mesh. Three soft poles — crimson ember, indigo counterpoint,
+          a small gold hot spot — over the ground. It rides the same drift loop
+          as everything else, so the glow moves without a second ticker, and the
+          fibre layer above grains it, which is what keeps a fill this large from
+          banding on an 8-bit display. */}
+      <div
+        data-drift
+        data-drift-secs={DRIFT.c}
+        data-drift-amp={9}
+        data-reverse="true"
+        className="absolute inset-[-25%] h-[150%] w-[150%]"
+        style={{
+          willChange: "transform",
+          background:
+            "radial-gradient(ellipse 55% 45% at 18% 22%, color-mix(in oklch, var(--color-crimson) 42%, transparent), transparent 68%)," +
+            "radial-gradient(ellipse 50% 50% at 82% 68%, color-mix(in oklch, var(--color-indigo) 38%, transparent), transparent 66%)," +
+            "radial-gradient(ellipse 34% 30% at 62% 12%, color-mix(in oklch, var(--color-gold) 22%, transparent), transparent 70%)",
+        }}
+      />
+
       {/* C2a · the 48px rule grid. Static CSS gradients — no element per line,
           nothing to animate, and it is what reads as "instrument" under the
           contours rather than as decoration. */}
@@ -235,8 +255,8 @@ export function Atmosphere() {
         className="absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(to right, color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px)," +
-            "linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px)",
+            "linear-gradient(to right, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px)," +
+            "linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px)",
           backgroundSize: "48px 48px",
           maskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 30%, transparent 100%)",
         }}
@@ -258,7 +278,7 @@ export function Atmosphere() {
             {topo.map((d, i) => (
               // Bands nearer the middle of the field carry more weight, so the
               // set reads as terrain with a ridge rather than as one flat hatch.
-              <path key={i} d={d} opacity={(0.15 - Math.abs(topo.length / 2 - i) * 0.012).toFixed(3)}
+              <path key={i} d={d} opacity={(0.11 - Math.abs(topo.length / 2 - i) * 0.009).toFixed(3)}
                     vectorEffect="non-scaling-stroke" />
             ))}
           </g>
@@ -316,8 +336,8 @@ export function Atmosphere() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 55%, var(--color-ink) 140%)",
-          opacity: 0.03,
+            "radial-gradient(ellipse at center, transparent 45%, #000 130%)",
+          opacity: 0.55,
         }}
       />
     </div>

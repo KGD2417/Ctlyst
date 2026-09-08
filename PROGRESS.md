@@ -603,6 +603,65 @@ distinct causes, in the order they were found:
 
 Evidence: `evidence/rev-19-trifold-1440.png`.
 
+## Client revision · 2026-09-08e — dark gradient re-skin
+
+The light paper/ink identity is retired for a dark ground with gradients, plus a
+cool counterpoint the palette did not have.
+
+**Palette, chosen by measurement rather than by eye.** Ratios are against
+`--paper` / `--paper-warm`:
+
+| Token | Value | On ground / raised |
+|---|---|---|
+| paper (ground) | `#0B0A0E` | — |
+| paper-warm (raised) | `#16141C` | — |
+| ink (body) | `#F4F1EA` | 17.50 / 16.18 |
+| ink-soft | `#C7C0B4` | 10.93 / 10.10 |
+| muted | `#9B9488` | 6.57 / 6.07 |
+| crimson | `#D9614F` | 5.43 / 5.02 |
+| crimson-deep (fill) | `#A03A31` | ink on it: 5.92 |
+| gold | `#D9B26A` | 9.89 / 9.15 |
+| **indigo** (new) | `#7C86E8` | 6.05 / 5.59 |
+| indigo-deep (fill) | `#3F47A8` | fill only |
+
+The token NAMES are unchanged — "paper" is now near-black and "ink" is off-white
+— because colour was fully tokenised (~415 utility usages across 9 tokens), so
+inverting the values re-skinned the site without touching the components. The
+darkened `gold-ink`/`muted-ink` small-text variants and the `[data-invert]`
+override that undid them are deleted: on a dark ground the full-strength hues are
+the legible ones.
+
+**Gradients.** Three utilities, all interpolated `in oklch` — crimson → indigo
+through sRGB passes a dead grey-brown at the midpoint. `.grad-text` for the hero
+emphasis (with a `forced-colors` fallback), `.band` for the six sections that used
+to be dark slabs on a light page, `.grad-fill` for primary CTAs. Plus a three-pole
+mesh in the atmosphere riding the existing drift loop. Nothing tweens a gradient
+stop: INV-3 still holds, and the existing fibre grain is what stops the large
+fills banding.
+
+**What the light theme was hiding** — found by sweeping computed contrast on
+every text node across all seven routes:
+
+| Fault | Was | Now |
+|---|---|---|
+| Band CTA ("Why We Are That Place") — paper-on-paper | 1.08 | 5.02+ |
+| Join form fields: `--rule` underline as the only affordance | 1.35 | 6.57 |
+| Process-diagram edges in `--rule` — the flow was unreadable | 1.35 | ~4.9 |
+| Timeline `/` separators in `--rule` (**pre-existing**, failed on light too) | 1.35 | 6.57 |
+
+Final sweep: **zero contrast failures** on rendered text across `/`, `/model`,
+`/why`, `/schemes`, `/roadmap`, `/demo`, `/join`. Frame time under scroll
+unchanged: median 16.6, p95 18.1, 0 long tasks. `next build` and `eslint` clean.
+
+Evidence: `evidence/rev-21-dark-home-1440.png`, `rev-22-dark-schemes-1440.png`,
+`rev-23-dark-demo-1440.png`, `rev-25-dark-join-1440.png`,
+`rev-26-dark-model-1440.png`, `rev-27-dark-home-390.png`,
+`rev-28-dark-preloader.png`.
+
+Not yet revisited under the dark theme: the Gap's WebGL pass got new uniform
+colours but its shader was tuned for ink-on-paper, and the four-walls panels have
+not been reviewed for the new ground.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -758,3 +817,14 @@ Things that broke and how they were fixed. Do not repeat these.
   relatedTarget pointed at a child; neither matched intent. `elementFromPoint`
   against the *settled* layout is the only reading that answers the question
   actually being asked
+- **A hairline token is not a text colour, and a light theme hides that.**
+  `--rule` was 1.3:1 against paper too — as separators, input underlines and
+  diagram edges it was always failing, but on a light ground it still read as a
+  faint grey line. Inverting the palette turned the same ratio into invisible.
+  Contrast-test decorative tokens wherever they carry meaning, not just body text
+- **Re-skinning is cheap only if colour is fully tokenised.** Nine tokens and
+  ~415 usages meant the entire dark theme was a value swap plus four genuine
+  fixes. The same change against hard-coded hexes would have been a week
+- **sRGB interpolation kills a two-hue gradient.** crimson → indigo through sRGB
+  passes a dead grey-brown; `in oklch` keeps the chroma up across the middle.
+  Also mind the mix ratio: indigo at 45% read as magenta, not as an ember cooling

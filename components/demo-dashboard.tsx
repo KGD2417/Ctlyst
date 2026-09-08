@@ -102,7 +102,7 @@ function Track({ title, steps }: { title: string; steps: Step[] }) {
         {steps.map((s, i) => (
           <li key={s.label} className="relative flex gap-4 pb-6 last:pb-0">
             {i < steps.length - 1 && (
-              <span aria-hidden="true" className="absolute left-[7px] top-4 h-full w-px bg-rule" />
+              <span aria-hidden="true" className="absolute left-[7px] top-4 h-full w-px bg-muted/40" />
             )}
             <span
               aria-hidden="true"

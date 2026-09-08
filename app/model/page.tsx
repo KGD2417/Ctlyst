@@ -68,7 +68,7 @@ export default function ModelPage() {
       </section>
 
       {/* distinction band */}
-      <section data-invert className="my-16 bg-ink px-8 py-24 text-center text-paper">
+      <section className="my-16 band px-8 py-24 text-center text-ink">
         <h2 className="t-mono-label text-gold">The Distinction</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Mentorship <em className="italic text-gold">+</em> technical help <em className="italic text-gold">+</em> funding{" "}
@@ -100,7 +100,7 @@ export default function ModelPage() {
       </section>
 
       <section className="px-8 py-20 text-center">
-        <CurtainLink href="/why" className="t-mono-label inline-block border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
+        <CurtainLink href="/why" className="t-mono-label inline-block grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
           See Why Founders Choose Us
         </CurtainLink>
       </section>

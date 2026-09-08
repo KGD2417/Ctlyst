@@ -18,11 +18,12 @@ export function makeFibreTile(size = 128, density = 0.55): string {
   const img = ctx.createImageData(size, size);
   const d = img.data;
   for (let i = 0; i < d.length; i += 4) {
-    // Transparent tile carrying only dark speckle. An opaque mid-grey tile —
-    // even at 2.8% — averages to a visible grey veil over --paper and kills the
-    // warm white entirely. Alpha-only noise tints nothing; it just breaks up the
-    // flatness, which is the whole job of layer B.
-    d[i] = d[i + 1] = d[i + 2] = 26;                       // --ink
+    // Transparent tile carrying only speckle. An opaque tile — even at 2.8% —
+    // averages to a visible veil over the ground and kills it. Alpha-only noise
+    // tints nothing; it just breaks up the flatness, which is the whole job of
+    // layer B, and on a dark ground it is also what keeps the large gradient
+    // fills from banding.
+    d[i] = d[i + 1] = d[i + 2] = 244;                      // --ink (light)
     d[i + 3] = Math.random() < 0.5 ? 0 : Math.random() * 255 * density;
   }
   ctx.putImageData(img, 0, 0);

@@ -33,7 +33,7 @@ export default function RoadmapPage() {
         <Timeline />
       </section>
 
-      <section data-invert className="my-12 bg-ink px-8 py-24 text-center text-paper">
+      <section className="my-12 band px-8 py-24 text-center text-ink">
         <h2 className="t-mono-label text-gold">A Sobering Truth We Plan Around</h2>
         <h2 className="t-display-m mx-auto mt-8 max-w-[26ch]">
           Most ventures fail from running out of <em className="italic text-gold">money or patience</em> —
@@ -90,7 +90,7 @@ export default function RoadmapPage() {
       </section>
 
       <section className="px-8 py-20 text-center">
-        <CurtainLink href="/join" className="t-mono-label inline-block border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep">
+        <CurtainLink href="/join" className="t-mono-label inline-block grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
           Walk This Road With Us
         </CurtainLink>
       </section>

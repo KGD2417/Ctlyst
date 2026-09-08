@@ -152,7 +152,7 @@ export function JoinForm() {
             {ROLES.map((r) => (
               <label
                 key={r.value}
-                className="group flex cursor-pointer items-start gap-3 border border-rule px-5 py-4 transition-colors duration-[280ms] has-[:checked]:border-crimson has-[:checked]:bg-paper-warm"
+                className="group flex cursor-pointer items-start gap-3 border border-muted/50 bg-paper-warm/40 px-5 py-4 transition-colors duration-[280ms] has-[:checked]:border-crimson has-[:checked]:bg-paper-warm"
               >
                 <input
                   type="radio" name="role" value={r.value}
@@ -181,7 +181,7 @@ export function JoinForm() {
             aria-invalid={!!errors.message}
             aria-describedby={errors.message ? "err-message" : undefined}
             onBlur={() => onBlur("message")}
-            className="mt-3 w-full resize-y border-0 border-b border-rule bg-transparent py-3 text-[1.1rem] text-ink outline-none focus:border-crimson"
+            className="mt-3 w-full resize-y border-0 border-b border-muted bg-transparent py-3 text-[1.1rem] text-ink outline-none focus:border-crimson"
           />
           <FieldError id="err-message" message={errors.message} />
         </div>
@@ -194,7 +194,7 @@ export function JoinForm() {
       <div className="mt-8 flex flex-wrap items-center gap-6">
         <button
           type="submit" disabled={state === "sending"}
-          className="t-mono-label border border-crimson bg-crimson px-9 py-4 text-paper transition-colors duration-[280ms] hover:bg-crimson-deep disabled:opacity-60"
+          className="t-mono-label grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms] disabled:opacity-60"
         >
           {state === "sending" ? "Sending…" : "Send the Letter"}
         </button>
@@ -217,7 +217,7 @@ function TextField({
         aria-invalid={!!error}
         aria-describedby={error ? `err-${name}` : undefined}
         onBlur={onBlur}
-        className="mt-3 w-full border-0 border-b border-rule bg-transparent py-3 text-[1.1rem] text-ink outline-none focus:border-crimson"
+        className="mt-3 w-full border-0 border-b border-muted bg-transparent py-3 text-[1.1rem] text-ink outline-none focus:border-crimson"
       />
       <FieldError id={`err-${name}`} message={error} />
     </div>
