@@ -22,7 +22,18 @@ export default function Home() {
       {/* Centred on its own axis, and carrying nothing but the claim and the two
           doors. The lede that used to sit under the buttons now opens the page
           proper, below — three stacked blocks under one headline read as clutter. */}
-      <section className="mx-auto max-w-[1180px] px-8 pb-20 pt-16 text-center md:pt-24">
+      <section className="relative mx-auto max-w-[1180px] px-8 pb-16 pt-16 text-center md:pt-24">
+        {/* Marginal annotations, as on an instrument. Both columns are drawn from
+            copy that already exists on this site (INV-8): the left is the hero
+            lede's three offers, the right is the three steps the model diagram
+            names. Desktop only — at 390 they would crowd the headline. */}
+        <ul aria-hidden="true" className="t-mono-label pointer-events-none absolute left-2 top-40 hidden space-y-2 text-left text-muted xl:block">
+          {["Mentors", "Technical help", "Funding schemes"].map((t) => <li key={t}>{t}</li>)}
+        </ul>
+        <ul aria-hidden="true" className="t-mono-label pointer-events-none absolute right-2 top-40 hidden space-y-2 text-right text-muted xl:block">
+          {["Diagnosis", "Match", "Outcome"].map((t) => <li key={t}>{t}</li>)}
+        </ul>
+
         <h2 className="t-mono-label text-gold">Bridging the gap between ideas and execution</h2>
         {/* §9.6 misregistration — use 2 of 2 (the curtain numeral is use 1) */}
         <SplitLines className="t-display-xl mx-auto mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
@@ -32,14 +43,22 @@ export default function Home() {
           </>
         </SplitLines>
         <div className="mt-12 flex flex-wrap justify-center gap-5">
-          <CurtainLink href="/join" className="t-mono-label grad-fill border border-crimson/60 px-9 py-4 text-ink transition-[background] duration-[280ms]">
+          <CurtainLink href="/join" className="t-mono-label grad-fill group inline-flex items-center gap-3 border border-crimson/60 px-9 py-4 text-ink">
             Begin Your Journey
+            <span aria-hidden="true" className="transition-transform duration-[280ms] group-hover:translate-x-1">&rarr;</span>
           </CurtainLink>
-          <CurtainLink href="/model" className="t-mono-label border border-ink px-9 py-4 text-ink transition-colors duration-[280ms] hover:bg-ink hover:text-paper">
+          <CurtainLink href="/model" className="t-mono-label group inline-flex items-center gap-3 border border-ink px-9 py-4 text-ink transition-colors duration-[280ms] hover:bg-ink hover:text-paper">
             Read the Model
+            <span aria-hidden="true" className="transition-transform duration-[280ms] group-hover:translate-x-1">&rarr;</span>
           </CurtainLink>
         </div>
       </section>
+
+      {/* The scroll cue: a hairline that fades downward into the page. */}
+      <div className="flex flex-col items-center gap-3 pb-10">
+        <p className="t-mono-label text-muted">Scroll to explore</p>
+        <span aria-hidden="true" className="h-14 w-px bg-gradient-to-b from-muted/60 to-transparent" />
+      </div>
 
       <p className="py-6 text-center text-xl" style={{ color: "var(--color-gold)" }}>❦</p>
 

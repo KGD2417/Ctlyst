@@ -729,6 +729,38 @@ Evidence: `evidence/rev-42-glass-schemes-1440.png`,
 `rev-45-glass-join-1440.png`, `rev-47-glass-mobilenav-390.png`,
 `rev-53-glass-transparent.png` (the final, see-through pass).
 
+## Client revision · 2026-09-09c — the premium pass
+
+Reference image supplied: glowing, colour-graded contours that react to the
+pointer, marginal annotations, a blooming CTA, and cards you can see through.
+
+**Atmosphere.** Each contour is now three strokes — a wide faint halo, a mid,
+and a hairline core — which is a bloom without a filter (`filter: blur()` over a
+full-screen layer re-rasterises on every pan; three strokes are just more
+geometry in one raster). Colour comes from a single gradient in the field's user
+space, so a contour runs ember at one end of the map and indigo at the other. A
+screen-space mask keeps the middle of the frame quiet, so the headline has a
+pocket to sit in and the energy stays at the margins.
+
+**The pointer bloom** is a second copy of the field, brighter, seen through a
+disc that follows the cursor. See the scar below for what the obvious build cost.
+
+**Hero chrome.** Marginal annotations (left: the hero lede's three offers; right:
+three steps the model diagram names — both traceable, INV-8), arrows on both
+CTAs, a "scroll to explore" hairline, and a CTA that emits light onto the page.
+
+**Cards.** Liquid-glass treatment: a lit inner top rim and shaded inner bottom so
+the pane reads as a slab with an edge, plus a specular sweep that brightens on
+hover — `opacity` only, so it runs on the compositor.
+
+| Check | Result |
+|---|---|
+| Contrast, 7 routes, tints composited over the ground | **0 real failures** |
+| Frame time, scrolling *and* pointer moving | median 16.6 / p95 18.0 / **0 dropped, 0 long tasks** |
+
+Evidence: `evidence/rev-57-hero-premium.png`, `rev-58-liquid-cards.png`,
+`rev-56-bloom-transform.png`.
+
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
 - **Catmull-Rom through alternating radii ≠ a rosette.** Fitting a spline through
@@ -911,3 +943,17 @@ Things that broke and how they were fixed. Do not repeat these.
 - **Frosted glass needs something behind it to frost.** On a dark ground a
   blurred panel at a high tint is indistinguishable from a flat panel; the effect
   only appears once the tint is open enough to show the layers underneath
+- **Animating `mask-image` re-rasterises everything the mask covers.** A pointer
+  bloom built as one layer whose radial mask followed the cursor measured a
+  **median frame of 63.7ms with 260 dropped frames and 17 long tasks** — because
+  the mask covered 10k stroke segments and every pointer move invalidated them.
+  Rebuilt so the mask is STATIC and a window translates instead, with the content
+  counter-translating to stay world-fixed: **16.7ms median, 1 dropped frame, 0
+  long tasks** on the identical test. Two transforms beat one mask
+- **`color/70` in Tailwind v4 compiles to `color-mix()` and serialises as
+  `oklab()`.** Any contrast check parsing `rgb()` silently mis-reads it — mine
+  reported 1.06:1 for text that was fine. Either convert properly or use solid
+  tokens where the value has to be provable
+- **`color: transparent` + `background-clip: text` reads as a contrast failure
+  to any automated check.** The colour genuinely is transparent; the paint comes
+  from the background. Exclude those elements explicitly rather than "fixing" them

@@ -25,6 +25,22 @@ import { dampFactor, changed } from "@/lib/damp";
 
 const DRIFT = { a: 47, b: 61, c: 73, d: 89 } as const; // seconds — all prime
 
+/** The pointer bloom's window, and the static mask that shapes it. */
+const BLOOM = 520;
+const BLOOM_DISC =
+  "radial-gradient(circle at 50% 50%, #000 0%, rgb(0 0 0 / 0.5) 42%, transparent 70%)";
+
+/** Keeps the middle of the frame quiet so the headline has somewhere to sit. */
+const CALM_CENTRE =
+  "radial-gradient(ellipse 58% 54% at 50% 46%, rgb(0 0 0 / 0.16) 0%, rgb(0 0 0 / 0.55) 52%, #000 100%)";
+
+/** Halo, mid, core — the three strokes that make a contour glow without a filter. */
+const GLOW = [
+  { w: 6, o: 0.05 },
+  { w: 2.5, o: 0.09 },
+  { w: 1, o: 0.30 },
+] as const;
+
 /** Contour field, in its own user-unit box. Built once on the client (~8ms). */
 const TOPO_BOX = { w: 2200, h: 1500 };
 
@@ -64,6 +80,8 @@ export function Atmosphere() {
   const root = useRef<HTMLDivElement>(null);
   const layerC = useRef<SVGSVGElement>(null);
   const layerB = useRef<HTMLDivElement>(null);
+  const bloomWin = useRef<HTMLDivElement>(null);
+  const bloomInner = useRef<HTMLDivElement>(null);
 
   const [topo, setTopo] = useState<string[]>([]);
 
@@ -168,7 +186,9 @@ export function Atmosphere() {
       // ── scroll parallax + pointer lerp, both on the ticker ───────────────
       if (reduced.matches) return;
 
-      const state = { px: 0, py: 0, tx: 0, ty: 0 };
+      // px/py: the damped parallax offset. rx/ry: the raw pointer, published to
+      // the root as custom properties so the bloom mask can follow it in CSS.
+      const state = { px: 0, py: 0, tx: 0, ty: 0, rx: -300, ry: -300, gx: -300, gy: -300 };
       const pointerOn = !coarse.matches && !small.matches;
 
       const onMove = (e: PointerEvent) => {
@@ -177,10 +197,12 @@ export function Atmosphere() {
         const ny = (e.clientY / window.innerHeight - 0.5) * 2;
         state.tx = nx * 24;
         state.ty = ny * 24;
+        state.rx = e.clientX;
+        state.ry = e.clientY;
       };
       if (pointerOn) window.addEventListener("pointermove", onMove, { passive: true });
 
-      let lastC = NaN, lastCx = NaN, lastB = NaN;
+      let lastC = NaN, lastCx = NaN, lastB = NaN, lastGx = NaN, lastGy = NaN;
 
       const tick = (_t: number, dt: number) => {
         const y = window.scrollY;
@@ -205,6 +227,24 @@ export function Atmosphere() {
         if (layerB.current && changed(by, lastB)) {
           lastB = by;
           layerB.current.style.transform = `translate3d(0, ${by.toFixed(2)}px, 0)`;
+        }
+
+        if (pointerOn) {
+          // The bloom trails the cursor rather than pinning to it — a light that
+          // has weight. Same damping treatment as everything else, and the same
+          // write-only-when-changed guard.
+          const g = dampFactor(0.12, dt);
+          state.gx += (state.rx - state.gx) * g;
+          state.gy += (state.ry - state.gy) * g;
+          if (changed(state.gx, lastGx) || changed(state.gy, lastGy)) {
+            lastGx = state.gx; lastGy = state.gy;
+            const x = state.gx.toFixed(1), y = state.gy.toFixed(1);
+            if (bloomWin.current) bloomWin.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            // counter-translate so the field inside the window stays world-fixed
+            if (bloomInner.current)
+              bloomInner.current.style.transform =
+                `translate3d(${(BLOOM / 2 - state.gx).toFixed(1)}px, ${(BLOOM / 2 - state.gy).toFixed(1)}px, 0)`;
+          }
         }
       };
       gsap.ticker.add(tick);
@@ -263,29 +303,93 @@ export function Atmosphere() {
       />
 
       {/* C2b · contour lines. Baked once, then only translated — the reference
-          shader animates by panning its noise field, which is the same thing. */}
+          shader animates by panning its noise field, which is the same thing.
+
+          Three strokes per contour instead of one: a wide faint halo, a mid, and
+          a hairline core. That is a bloom without a filter — `filter: blur()` or
+          an SVG feGaussianBlur over a full-screen layer re-rasterises on every
+          pan, where three strokes are just more geometry in the same raster.
+
+          Colour comes from one gradient in the field's own user space, so a
+          contour runs ember on one side of the map and indigo on the other
+          rather than being uniformly grey. */}
       <svg
         viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
         preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-[-6%] h-[112%] w-[112%]"
+        className="absolute inset-0 h-full w-full"
+        style={{
+          // The field is loudest at the edges and quietest where the type sits.
+          // Without this the contours run straight through the headline and the
+          // page has no centre — the reference keeps a calm pocket for the words
+          // and pushes the energy to the margins.
+          WebkitMaskImage: CALM_CENTRE,
+          maskImage: CALM_CENTRE,
+        }}
       >
+        <defs>
+          <linearGradient id="topo-ink" gradientUnits="userSpaceOnUse"
+                          x1="0" y1="0" x2={TOPO_BOX.w} y2={TOPO_BOX.h * 0.55}>
+            <stop offset="0" stopColor="var(--color-crimson)" />
+            <stop offset="0.45" stopColor="var(--color-gold)" />
+            <stop offset="1" stopColor="var(--color-indigo)" />
+          </linearGradient>
+        </defs>
         <g data-topo-pan style={{ willChange: "transform" }}>
           {/* The field is drawn once and <use>d for the second copy, one field
               width along. Rendering both copies as real paths doubled 3.5k
               segments of DOM and put a 50ms task back on the load path. */}
-          <g id="topo-field" fill="none" stroke="var(--color-ink)" strokeWidth="1"
-             vectorEffect="non-scaling-stroke">
-            {topo.map((d, i) => (
-              // Bands nearer the middle of the field carry more weight, so the
-              // set reads as terrain with a ridge rather than as one flat hatch.
-              <path key={i} d={d} opacity={(0.11 - Math.abs(topo.length / 2 - i) * 0.009).toFixed(3)}
-                    vectorEffect="non-scaling-stroke" />
+          <g id="topo-field" fill="none" stroke="url(#topo-ink)" vectorEffect="non-scaling-stroke">
+            {GLOW.map((pass) => (
+              <g key={pass.w} strokeWidth={pass.w} opacity={pass.o}>
+                {topo.map((d, i) => (
+                  // Bands nearer the middle of the field carry more weight, so
+                  // the set reads as terrain with a ridge rather than a hatch.
+                  <path key={i} d={d} opacity={(1 - Math.abs(topo.length / 2 - i) * 0.08).toFixed(3)}
+                        vectorEffect="non-scaling-stroke" />
+                ))}
+              </g>
             ))}
           </g>
           {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
           <use href="#topo-field" x={TOPO_BOX.w} />
         </g>
       </svg>
+
+      {/* C2c · the same field again, brighter, seen through a disc that follows
+          the pointer: the contours near the cursor light up as if the map were
+          lit from where you are looking.
+
+          The obvious build — one masked layer whose `mask-image` radial moves
+          with the pointer — measured a median frame of 63.7ms with 260 dropped
+          frames, because moving a mask re-rasterises everything it masks, and
+          this masks 10k stroke segments. So the mask is STATIC and the disc
+          moves instead: an outer window translates to the pointer, and the
+          field inside counter-translates by the same amount so it stays put in
+          the world. Two transforms, no re-raster. */}
+      <div
+        ref={bloomWin}
+        aria-hidden="true"
+        className="absolute left-0 top-0"
+        style={{
+          width: BLOOM, height: BLOOM, marginLeft: -BLOOM / 2, marginTop: -BLOOM / 2,
+          opacity: 0.85, willChange: "transform",
+          transform: "translate3d(-9999px,0,0)",   // parked until the pointer arrives
+          WebkitMaskImage: BLOOM_DISC, maskImage: BLOOM_DISC,
+        }}
+      >
+        <div ref={bloomInner} className="absolute left-0 top-0 h-screen w-screen" style={{ willChange: "transform" }}>
+          <svg
+            viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
+            preserveAspectRatio="xMidYMid slice"
+            className="h-full w-full"
+          >
+            <g data-topo-pan style={{ willChange: "transform" }}>
+              <use href="#topo-field" />
+              <use href="#topo-field" x={TOPO_BOX.w} />
+            </g>
+          </svg>
+        </div>
+      </div>
 
       {/* D · wash — per-route tint, 2% */}
       {WASH[pathname] && (

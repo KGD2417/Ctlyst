@@ -263,6 +263,18 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 /* Filled CTA: a short ember ramp rather than a flat fill. */
 .grad-fill {
   background: linear-gradient(135deg in oklch, var(--color-crimson-deep), color-mix(in oklch, var(--color-indigo-deep) 26%, var(--color-crimson-deep)));
+  /* The button emits light onto the page instead of sitting on it. */
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--color-crimson) 45%, transparent),
+    0 8px 34px -8px color-mix(in oklch, var(--color-crimson) 55%, transparent),
+    0 2px 10px -2px rgb(0 0 0 / 0.6);
+  transition: box-shadow 280ms var(--ease-brand), background 280ms var(--ease-brand);
+}
+.grad-fill:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--color-crimson) 70%, transparent),
+    0 10px 46px -6px color-mix(in oklch, var(--color-crimson) 75%, transparent),
+    0 2px 10px -2px rgb(0 0 0 / 0.6);
 }
 .grad-fill:hover {
   background: linear-gradient(135deg in oklch, var(--color-crimson), color-mix(in oklch, var(--color-indigo-deep) 34%, var(--color-crimson)));
@@ -287,7 +299,16 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
      work of saying "this is a surface" — a brighter hairline and a soft drop
      shadow to lift it off the ground. */
   border: 1px solid color-mix(in oklch, var(--color-ink) 26%, transparent);
-  box-shadow: 0 10px 40px -12px rgb(0 0 0 / 0.55);
+  /* Depth: a drop shadow to lift the pane, a lit inner top rim and a shaded
+     inner bottom. The rim is what makes glass read as a thick slab with an edge
+     that catches light rather than as a flat translucent rectangle.
+     Deliberately NOT `position: relative` here — the nav carries .glass and is
+     `sticky`, and .glass is declared after Tailwind's utilities, so it would
+     win and break the sticky header. */
+  box-shadow:
+    0 10px 40px -12px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 0 color-mix(in oklch, var(--color-ink) 20%, transparent),
+    inset 0 -1px 0 0 rgb(0 0 0 / 0.35);
 }
 
 /* The lit top edge that makes a pane read as glass rather than as a grey box. */
@@ -299,7 +320,28 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
   height: 1px;
   pointer-events: none;
   background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--color-ink) 28%, transparent), transparent);
+  z-index: 1;
 }
+/* Specular sweep across the pane, brightening on hover. Only `opacity` moves,
+   so the hover runs on the compositor — the same reason the pointer bloom in
+   the background moves a window instead of a mask. */
+.glass-lit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+  transition: opacity 420ms var(--ease-brand);
+  background:
+    linear-gradient(133deg,
+      color-mix(in oklch, var(--color-ink) 9%, transparent) 0%,
+      transparent 34%,
+      transparent 68%,
+      color-mix(in oklch, var(--color-indigo) 7%, transparent) 100%);
+}
+.glass-lit:hover::after, .glass-lit:focus-within::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .glass-lit::after { transition: none; } }
 
 /* Everything above costs GPU on a surface that is decorative. Where the device
    asks for less motion we also spend less: a flat tint, no re-sampling. */
