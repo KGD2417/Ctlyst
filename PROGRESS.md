@@ -957,3 +957,12 @@ Things that broke and how they were fixed. Do not repeat these.
 - **`color: transparent` + `background-clip: text` reads as a contrast failure
   to any automated check.** The colour genuinely is transparent; the paint comes
   from the background. Exclude those elements explicitly rather than "fixing" them
+- **A 150%-sized, `will-change: transform` gradient box gets tile-clipped by Chromium.**
+  The B3 mesh was `inset-[-25%] h-[150%] w-[150%]` riding the drift loop; its indigo
+  pole rendered with a hard horizontal cut at y≈535 and a second one at y≈690 on the
+  left — a raster-tile boundary, not a gradient stop. Two false leads first: the box's
+  own rotated edges (computed, all off-screen) and the contour geometry. Isolated by
+  `display:none` on the layer, which made the seam vanish. Fix: the mesh is a static
+  `absolute inset-0` div — viewport-sized, no transform, no `will-change`. Also removes
+  the coordinate trap where a pole "at 4% 6%" landed at viewport −19% because the box
+  started at −25% and was 1.5× scale.

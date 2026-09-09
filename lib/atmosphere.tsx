@@ -34,12 +34,23 @@ const BLOOM_DISC =
 const CALM_CENTRE =
   "radial-gradient(ellipse 58% 54% at 50% 46%, rgb(0 0 0 / 0.16) 0%, rgb(0 0 0 / 0.55) 52%, #000 100%)";
 
-/** Halo, mid, core — the three strokes that make a contour glow without a filter. */
+/** Halo, mid, core, dust — the strokes that make a contour glow without a
+ *  filter. The dashed passes break the core into points, so a lit contour reads
+ *  as a filament of particles rather than as a drawn line. */
 const GLOW = [
-  { w: 6, o: 0.05 },
-  { w: 2.5, o: 0.09 },
-  { w: 1, o: 0.30 },
+  { w: 8, o: 0.13 },
+  { w: 3, o: 0.24 },
+  { w: 1.2, o: 0.9, dash: "2 7" },
+  { w: 2.6, o: 0.85, dash: "0.5 26" },
 ] as const;
+
+/** Where the field is allowed to light up. Everywhere else it stays dark
+ *  bronze — the page is near-black, and the colour is three localised blooms
+ *  (ember top-left, ember low-left, violet right) rather than a wash. */
+const HOT_ZONES =
+  "radial-gradient(ellipse 26% 50% at -1% 10%, #000 0%, rgb(0 0 0 / 0.8) 30%, transparent 72%)," +
+  "radial-gradient(ellipse 15% 24% at 4% 84%, #000 0%, rgb(0 0 0 / 0.6) 32%, transparent 74%)," +
+  "radial-gradient(ellipse 21% 42% at 101% 56%, #000 0%, rgb(0 0 0 / 0.75) 32%, transparent 74%)";
 
 /** Contour field, in its own user-unit box. Built once on the client (~8ms). */
 const TOPO_BOX = { w: 2200, h: 1500 };
@@ -268,23 +279,26 @@ export function Atmosphere() {
         data-fibre
       />
 
-      {/* B3 · the mesh. Three soft poles — crimson ember, indigo counterpoint,
-          a small gold hot spot — over the ground. It rides the same drift loop
-          as everything else, so the glow moves without a second ticker, and the
-          fibre layer above grains it, which is what keeps a fill this large from
-          banding on an 8-bit display. */}
+      {/* B3 · the mesh. Three localised poles — an ember in the top-left
+          corner, a small one low-left, an indigo counterpoint on the right edge
+          — over an otherwise black ground. The fibre layer above grains it,
+          which is what keeps a fill this large from banding on an 8-bit display.
+
+          Deliberately STATIC and viewport-sized. It used to be a 150% box with
+          `will-change: transform` riding the drift loop, and Chromium
+          tile-clipped that layer: the indigo pole ended in a hard horizontal
+          edge at y≈535. The motion in this frame comes from the panning
+          contours and the pointer bloom; the glow itself does not need to move,
+          and not moving costs one fewer composited layer. */}
       <div
-        data-drift
-        data-drift-secs={DRIFT.c}
-        data-drift-amp={9}
-        data-reverse="true"
-        className="absolute inset-[-25%] h-[150%] w-[150%]"
+        className="absolute inset-0"
         style={{
-          willChange: "transform",
           background:
-            "radial-gradient(ellipse 55% 45% at 18% 22%, color-mix(in oklch, var(--color-crimson) 42%, transparent), transparent 68%)," +
-            "radial-gradient(ellipse 50% 50% at 82% 68%, color-mix(in oklch, var(--color-indigo) 38%, transparent), transparent 66%)," +
-            "radial-gradient(ellipse 34% 30% at 62% 12%, color-mix(in oklch, var(--color-gold) 22%, transparent), transparent 70%)",
+            // Ember, not maroon: crimson alone goes brick under the grain, so the corner
+            // pole is pulled a third of the way to gold.
+            "radial-gradient(ellipse 34% 46% at -2% -4%, color-mix(in oklch, color-mix(in oklch, var(--color-crimson), var(--color-gold) 34%) 95%, transparent), transparent 70%)," +
+            "radial-gradient(ellipse 17% 21% at 4% 82%, color-mix(in oklch, var(--color-crimson) 55%, transparent), transparent 74%)," +
+            "radial-gradient(ellipse 25% 40% at 102% 56%, color-mix(in oklch, var(--color-indigo) 88%, transparent), transparent 72%)",
         }}
       />
 
@@ -305,14 +319,11 @@ export function Atmosphere() {
       {/* C2b · contour lines. Baked once, then only translated — the reference
           shader animates by panning its noise field, which is the same thing.
 
-          Three strokes per contour instead of one: a wide faint halo, a mid, and
-          a hairline core. That is a bloom without a filter — `filter: blur()` or
-          an SVG feGaussianBlur over a full-screen layer re-rasterises on every
-          pan, where three strokes are just more geometry in the same raster.
-
-          Colour comes from one gradient in the field's own user space, so a
-          contour runs ember on one side of the map and indigo on the other
-          rather than being uniformly grey. */}
+          The field is drawn TWICE. This copy is the dark one: a single hairline
+          in near-black bronze, present everywhere, which is the terrain. The
+          layer below it is the same geometry lit up inside three small zones,
+          which is the energy. A field that is uniformly bright everywhere has no
+          focus — the reference keeps the map dark and puts the light in corners. */}
       <svg
         viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
         preserveAspectRatio="xMidYMid slice"
@@ -327,33 +338,72 @@ export function Atmosphere() {
         }}
       >
         <defs>
+          {/* Bright ramp — only the hot zones and the pointer bloom use it. */}
           <linearGradient id="topo-ink" gradientUnits="userSpaceOnUse"
                           x1="0" y1="0" x2={TOPO_BOX.w} y2={TOPO_BOX.h * 0.55}>
             <stop offset="0" stopColor="var(--color-crimson)" />
             <stop offset="0.45" stopColor="var(--color-gold)" />
             <stop offset="1" stopColor="var(--color-indigo)" />
           </linearGradient>
+          {/* Unlit terrain: warm on one flank, cool on the other, but barely
+              above the ground either way. */}
+          <linearGradient id="topo-dim" gradientUnits="userSpaceOnUse"
+                          x1="0" y1="0" x2={TOPO_BOX.w} y2={TOPO_BOX.h * 0.55}>
+            <stop offset="0" stopColor="var(--color-crimson-deep)" />
+            <stop offset="0.5" stopColor="var(--color-rule)" />
+            <stop offset="1" stopColor="var(--color-indigo-deep)" />
+          </linearGradient>
+          {/* Geometry only — no stroke, so every consumer colours it itself.
+              Rendering it per consumer doubled 3.5k segments of DOM and put a
+              50ms task back on the load path, so it is <use>d instead. */}
+          <g id="topo-lines" fill="none" vectorEffect="non-scaling-stroke">
+            {topo.map((d, i) => (
+              // Bands nearer the middle of the field carry more weight, so
+              // the set reads as terrain with a ridge rather than a hatch.
+              <path key={i} d={d} opacity={(1 - Math.abs(topo.length / 2 - i) * 0.08).toFixed(3)}
+                    vectorEffect="non-scaling-stroke" />
+            ))}
+          </g>
         </defs>
         <g data-topo-pan style={{ willChange: "transform" }}>
-          {/* The field is drawn once and <use>d for the second copy, one field
-              width along. Rendering both copies as real paths doubled 3.5k
-              segments of DOM and put a 50ms task back on the load path. */}
-          <g id="topo-field" fill="none" stroke="url(#topo-ink)" vectorEffect="non-scaling-stroke">
+          <g stroke="url(#topo-dim)" strokeWidth={1.1} opacity={0.55}>
+            <use href="#topo-lines" />
+            {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
+            <use href="#topo-lines" x={TOPO_BOX.w} />
+          </g>
+        </g>
+      </svg>
+
+      {/* C2b-hot · the same contours, lit. Masked to three zones in CSS rather
+          than with an SVG mask so the mask is a compositor input, not something
+          the 10k-segment field has to be re-rasterised through on every pan.
+
+          Four strokes per contour instead of one: a wide faint halo, a mid, a
+          dashed hairline core, and a sparse round-cap dash that lands as dust.
+          That is a bloom without a filter — `filter: blur()` over a fullscreen
+          layer re-rasterises on every pan, where more strokes are just more
+          geometry in the same raster. */}
+      <div
+        className="absolute inset-0"
+        style={{ WebkitMaskImage: HOT_ZONES, maskImage: HOT_ZONES }}
+      >
+        <svg
+          viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
+          preserveAspectRatio="xMidYMid slice"
+          className="h-full w-full"
+        >
+          <g data-topo-pan style={{ willChange: "transform" }}>
             {GLOW.map((pass) => (
-              <g key={pass.w} strokeWidth={pass.w} opacity={pass.o}>
-                {topo.map((d, i) => (
-                  // Bands nearer the middle of the field carry more weight, so
-                  // the set reads as terrain with a ridge rather than a hatch.
-                  <path key={i} d={d} opacity={(1 - Math.abs(topo.length / 2 - i) * 0.08).toFixed(3)}
-                        vectorEffect="non-scaling-stroke" />
-                ))}
+              <g key={pass.w} stroke="url(#topo-ink)" strokeWidth={pass.w} opacity={pass.o}
+                 strokeDasharray={"dash" in pass ? pass.dash : undefined}
+                 strokeLinecap={"dash" in pass ? "round" : undefined}>
+                <use href="#topo-lines" />
+                <use href="#topo-lines" x={TOPO_BOX.w} />
               </g>
             ))}
           </g>
-          {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
-          <use href="#topo-field" x={TOPO_BOX.w} />
-        </g>
-      </svg>
+        </svg>
+      </div>
 
       {/* C2c · the same field again, brighter, seen through a disc that follows
           the pointer: the contours near the cursor light up as if the map were
@@ -384,8 +434,14 @@ export function Atmosphere() {
             className="h-full w-full"
           >
             <g data-topo-pan style={{ willChange: "transform" }}>
-              <use href="#topo-field" />
-              <use href="#topo-field" x={TOPO_BOX.w} />
+              {GLOW.slice(1).map((pass) => (
+                <g key={pass.w} stroke="url(#topo-ink)" strokeWidth={pass.w} opacity={pass.o}
+                   strokeDasharray={"dash" in pass ? pass.dash : undefined}
+                   strokeLinecap={"dash" in pass ? "round" : undefined}>
+                  <use href="#topo-lines" />
+                  <use href="#topo-lines" x={TOPO_BOX.w} />
+                </g>
+              ))}
             </g>
           </svg>
         </div>
@@ -440,8 +496,8 @@ export function Atmosphere() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 45%, #000 130%)",
-          opacity: 0.55,
+            "radial-gradient(ellipse at center, transparent 62%, #000 128%)",
+          opacity: 0.42,
         }}
       />
     </div>
