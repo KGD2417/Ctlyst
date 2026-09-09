@@ -135,17 +135,24 @@ const WASH: Record<string, string> = {
  * The mask stays on the OUTER, viewport-sized div. Masking the panning box
  * instead would drag the hot zones along with the contours.
  */
-function Field({ mask, stroke, passes = GLOW }: {
+function Field({ mask, stroke, passes = GLOW, promote = true }: {
   mask: string;
   stroke: string;
   passes?: readonly { w: number; o: number; dash?: string }[];
+  /** Give this copy its own compositor layer. Worth it for the full-screen
+   *  copies, where the pan would otherwise repaint the whole field every frame.
+   *  Not worth it under the pointer bloom: only a 520px disc of that copy is
+   *  ever visible, so repainting it is cheap, where promoting it would cost a
+   *  full 2880x900 texture for a disc a fifth that size. */
+  promote?: boolean;
 }) {
   return (
     <div
       className="absolute inset-0 overflow-hidden"
       style={{ WebkitMaskImage: mask, maskImage: mask }}
     >
-      <div data-topo-pan className="absolute inset-y-0 left-0 w-[200%]" style={{ willChange: "transform" }}>
+      <div data-topo-pan className="absolute inset-y-0 left-0 w-[200%]"
+           style={promote ? { willChange: "transform" } : undefined}>
         <svg
           viewBox={`0 0 ${TOPO_BOX.w * 2} ${TOPO_BOX.h}`}
           preserveAspectRatio="xMidYMid slice"
@@ -495,7 +502,7 @@ export function Atmosphere() {
           {/* The core pass only. Splitting the hot layer by colour doubled its
               geometry, and this is where it is paid back: under a 520px disc a
               halo is not what you notice, the beading is. */}
-          <Field mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} />
+          <Field mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} promote={false} />
         </div>
       </div>
 
