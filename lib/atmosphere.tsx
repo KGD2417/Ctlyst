@@ -45,7 +45,12 @@ const CALM_CENTRE =
 const GLOW = [
   { w: 8, o: 0.15 },
   { w: 3, o: 0.26 },
-  { w: 1.6, o: 0.95, dash: "2 9" },
+  // Coarser than it looks like it should be, on purpose. The field is
+  // rasterised at FIELD_DPR 1 and then displayed on whatever panel you have, so
+  // a 2px dash on a retina screen is upscaled to 4 soft device pixels and the
+  // beading dissolves into a continuous line. At 3.6px it survives the upscale
+  // and still reads as separate points — which is the whole effect.
+  { w: 2.4, o: 0.95, dash: "3.6 13" },
 ] as const;
 
 /**
@@ -154,9 +159,11 @@ function fieldImage(paths: string[], stroke: string, passes: readonly Pass[], wr
       return `<g fill="none" stroke="${stroke}" stroke-width="${p.w}" opacity="${p.o}"${dash}${ns}>${copies}</g>`;
     })
     .join("");
+  // Explicit width/height as well as the viewBox: an SVG with no intrinsic
+  // size draws as a zero-sized image through canvas drawImage in some engines.
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${boxW} ${H}" ` +
-    `preserveAspectRatio="xMidYMid slice">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${boxW}" height="${H}" ` +
+    `viewBox="0 0 ${boxW} ${H}" preserveAspectRatio="xMidYMid slice">` +
     `<defs><g id="f">${defs}</g></defs>${layer}</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -183,23 +190,65 @@ function resolveColor(value: string) {
 }
 
 /** One masked, panning copy of the field — as a bitmap, not live geometry. */
+/**
+ * How many device pixels the field is allowed per CSS pixel.
+ *
+ * An <img> is rasterised at layout size x devicePixelRatio, and this field is
+ * two viewport widths across, so on a retina panel four of them came to ~150MB
+ * of decoded bitmap. That is enough to put a laptop under memory pressure, and
+ * a browser under memory pressure drops and re-decodes — which is stutter.
+ *
+ * A canvas lets the backing store be set explicitly, so the cap is 1: one
+ * device pixel per CSS pixel, ~37MB for the same four layers. It is a soft,
+ * far-out-of-focus background of blurred contours; at 2x it was paying retina
+ * resolution for something deliberately out of focus.
+ */
+const FIELD_DPR = 1;
+
+/** One masked, panning copy of the field, rasterised once into a canvas. */
 function HotField({ mask, src, wrap }: { mask: string; src: string; wrap: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const cv = ref.current;
+    if (!cv) return;
+    let cancelled = false;
+    const img = new Image();
+
+    const paint = () => {
+      if (cancelled || !img.complete || !img.naturalWidth) return;
+      const w = Math.round(cv.clientWidth * FIELD_DPR);
+      const h = Math.round(cv.clientHeight * FIELD_DPR);
+      if (!w || !h) return;
+      // Assigning width/height also clears the canvas, so only touch them when
+      // the size actually changed — otherwise a stray observer callback blanks
+      // the field for a frame.
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      cv.getContext("2d")?.drawImage(img, 0, 0, w, h);
+    };
+
+    img.onload = paint;
+    img.src = src;
+
+    // The field has to be redrawn when the viewport changes size, because the
+    // canvas is sized in CSS and its backing store is not.
+    const ro = new ResizeObserver(paint);
+    ro.observe(cv);
+
+    return () => { cancelled = true; img.onload = null; ro.disconnect(); };
+  }, [src]);
+
   return (
     <div
       className="absolute inset-0 overflow-hidden"
       style={{ WebkitMaskImage: mask, maskImage: mask }}
     >
       {/* Two field widths wide, so -50% of it is exactly one field width on
-          screen and copy B lands where copy A began. `alt=""` and the parent's
-          aria-hidden keep it out of the accessibility tree. */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- a runtime-built
-          data URL, decorative and aria-hidden; next/image cannot optimise it
-          and would only add a loader round trip. */}
-      <img
+          screen and copy B lands where copy A began. */}
+      <canvas
+        ref={ref}
         data-topo-pan
-        src={src}
-        alt=""
-        draggable={false}
+        aria-hidden="true"
         className="absolute inset-y-0 left-0 h-full max-w-none"
         style={{ width: wrap ? "200%" : "100%" }}
       />
@@ -260,7 +309,9 @@ export function Atmosphere() {
       dim: fieldImage(topo, dim, [{ w: 1.1, o: 0.6 }], motion),
       ember: fieldImage(topo, ember, GLOW, motion),
       violet: fieldImage(topo, violet, GLOW, motion),
-      bloom: fieldImage(topo, ember, GLOW.slice(2), motion),
+      // Deliberately the SAME string as `ember`, so the browser decodes one
+      // bitmap and both layers share it instead of paying for a fourth.
+      bloom: fieldImage(topo, ember, GLOW, motion),
     };
   }, [topo, motion]);
 
