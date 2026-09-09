@@ -390,6 +390,10 @@ export function Atmosphere() {
             "linear-gradient(to right, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px)," +
             "linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px)",
           backgroundSize: "48px 48px",
+          // Both spellings: unprefixed `mask-image` only landed in Safari 15.4,
+          // and without the prefix the grid renders to its hard rectangular
+          // edge on anything older instead of fading out.
+          WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 30%, transparent 100%)",
           maskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 30%, transparent 100%)",
         }}
       />

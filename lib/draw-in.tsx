@@ -21,8 +21,17 @@ export function Reveal({
     const mm = gsap.matchMedia();
 
     mm.add("(prefers-reduced-motion: reduce)", () => {
-      gsap.set(q(selector), { opacity: 1, y: 0 });
+      // Opacity only — no y, no stagger. The stroke draw stays instant: a line
+      // drawing itself is motion, where a fade is not.
       gsap.set(q("[data-draw]"), { drawSVG: "100%" });
+      const rows = q(selector);
+      if (!rows.length) return;
+      gsap.set(rows, { y: 0 });
+      const tween = gsap.fromTo(rows, { opacity: 0 }, {
+        opacity: 1, duration: 0.5, ease: "power1.out",
+        scrollTrigger: { trigger: root, start: "top 82%", once: true },
+      });
+      return () => { tween.kill(); };
     });
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {

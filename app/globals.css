@@ -292,12 +292,17 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
    what gives them their colour, but text still has to clear AA against the
    brightest point of that mesh, which is what 72% buys. */
 .glass {
+  /* Plain-rgba first, color-mix second: a browser that cannot parse the second
+     drops that declaration alone and keeps this one, rather than rendering the
+     pane with no background at all. Same pattern on the border below. */
+  background: rgb(22 20 28 / 0.20);
   background: color-mix(in oklch, var(--color-paper-warm) 20%, transparent);
   -webkit-backdrop-filter: blur(7px) saturate(1.5);
   backdrop-filter: blur(7px) saturate(1.5);
   /* At 20% the pane barely tints what is behind it, so the EDGE has to do the
      work of saying "this is a surface" — a brighter hairline and a soft drop
      shadow to lift it off the ground. */
+  border: 1px solid rgb(244 241 234 / 0.26);
   border: 1px solid color-mix(in oklch, var(--color-ink) 26%, transparent);
   /* Depth: a drop shadow to lift the pane, a lit inner top rim and a shaded
      inner bottom. The rim is what makes glass read as a thick slab with an edge
@@ -343,9 +348,13 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .glass-lit:hover::after, .glass-lit:focus-within::after { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .glass-lit::after { transition: none; } }
 
-/* Everything above costs GPU on a surface that is decorative. Where the device
-   asks for less motion we also spend less: a flat tint, no re-sampling. */
-@media (prefers-reduced-motion: reduce) {
-  .glass { -webkit-backdrop-filter: none; backdrop-filter: none;
-           background: color-mix(in oklch, var(--color-paper-warm) 94%, transparent); }
-}
+/* NOTE: reduced motion does NOT drop the blur.
+   It used to — `backdrop-filter: none` plus a 94% flat tint — on the reasoning
+   that the blur is decorative GPU cost. That was wrong twice over. A blur is
+   not motion, so INV-2 never asked for it (INV-2 disables pinning, scrubbing,
+   hijack, cursor and WebGL, and nothing else). And Windows turns
+   `prefers-reduced-motion: reduce` on from Settings > Accessibility > Visual
+   effects > Animation effects, which is off on a lot of machines and is forced
+   off by battery saver — so a large share of Windows visitors were getting a
+   flat grey navbar and reading it as a broken site. Reduce the motion, keep
+   the material. */

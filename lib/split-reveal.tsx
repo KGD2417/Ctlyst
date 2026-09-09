@@ -33,8 +33,22 @@ export function SplitLines({
 
     const mm = gsap.matchMedia();
 
+    // INV-2's own check is "content appears with opacity only" — so it appears,
+    // rather than being there already. A snap to opacity 1 is what made Windows
+    // read as a dead page: `reduce` is on by default on a lot of machines, and
+    // every reveal on the site resolved before it could be seen. Opacity is not
+    // motion; no transform, no stagger, no scrub.
     mm.add("(prefers-reduced-motion: reduce)", () => {
-      gsap.set(node, { opacity: 1 });
+      const tween = gsap.fromTo(node, { opacity: 0 }, {
+        opacity: 1,
+        duration: 0.5,
+        ease: "power1.out",
+        delay,
+        ...(trigger
+          ? { scrollTrigger: { trigger: node, start: "top 85%", once: true } }
+          : {}),
+      });
+      return () => { tween.kill(); };
     });
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {

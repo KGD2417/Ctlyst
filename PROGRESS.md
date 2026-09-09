@@ -1018,3 +1018,16 @@ Things that broke and how they were fixed. Do not repeat these.
   ambient layer is painting over the page. Use `display: none` on the suspect layer and
   screenshot in a fresh tab instead. Three separate wrong diagnoses came out of trusting
   those two signals.
+- **Windows reports `prefers-reduced-motion: reduce` far more often than you would guess,
+  and the site was treating that as "strip the design".** Settings > Accessibility >
+  Visual effects > Animation effects is off on a lot of machines and is forced off by
+  battery saver. One media query then explained every symptom in a bug report that read
+  like three unrelated ones: no animation anywhere, a navbar that "looks plain, not
+  frosted", and background effects behaving differently per machine.
+  Two things were wrong. `.glass` dropped `backdrop-filter` under reduce — a blur is not
+  motion, and INV-2 only ever asked for pinning, scrubbing, hijack, cursor and WebGL.
+  And every reveal resolved with `gsap.set(opacity: 1)`, so content was simply already
+  there; INV-2's own check says "content appears with opacity only", which means it
+  appears. Both fixed. Reduce now means: no transforms, no scrub, no pin, no cursor, no
+  ambient pan — but the material and the fades stay.
+  Test it with `page.emulateMedia({ reducedMotion: 'reduce' })`, not by reasoning about it.
