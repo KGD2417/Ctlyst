@@ -117,10 +117,16 @@ const WASH: Record<string, string> = {
 };
 
 /** One masked, panning copy of the lit contour field. */
-function HotField({ mask, stroke, passes = GLOW }: {
+function HotField({ mask, stroke, passes = GLOW, wrap = true }: {
   mask: string;
   stroke: string;
   passes?: readonly { w: number; o: number; dash?: string }[];
+  /** The second copy, parked one field width along, exists ONLY so the pan can
+   *  loop seamlessly. With the pan off it sits off-screen forever and is never
+   *  reached — pure raster cost for something nobody can see. Dropping it halves
+   *  the field's geometry for every reduced-motion visitor, who is also the
+   *  visitor most likely to be on a machine that needed the help. */
+  wrap?: boolean;
 }) {
   return (
     <div className="absolute inset-0" style={{ WebkitMaskImage: mask, maskImage: mask }}>
@@ -134,7 +140,7 @@ function HotField({ mask, stroke, passes = GLOW }: {
             <g key={pass.w} fill="none" stroke={stroke} strokeWidth={pass.w} opacity={pass.o}
                strokeDasharray={pass.dash} strokeLinecap={pass.dash ? "round" : undefined}>
               <use href="#topo-lines" />
-              <use href="#topo-lines" x={TOPO_BOX.w} />
+              {wrap && <use href="#topo-lines" x={TOPO_BOX.w} />}
             </g>
           ))}
         </g>
@@ -178,6 +184,16 @@ export function Atmosphere() {
   const bloomInner = useRef<HTMLDivElement>(null);
 
   const [topo, setTopo] = useState<string[]>([]);
+  /** Is the field allowed to pan? Drives whether the wrap copy is worth drawing. */
+  const [motion, setMotion] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setMotion(!mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const all = arrangementFor(pathname);
   const [placements, setPlacements] = useState(all);
@@ -209,6 +225,9 @@ export function Atmosphere() {
       const { makeFibreTile, isLowEnd } = await import("@/lib/fibre");
       if (cancelled || !layerB.current) return;
       const low = isLowEnd();
+      // Published for CSS: the frosted surfaces cost ~13% of task time across a
+      // scroll, and a weak device buys that back with a flat tint instead.
+      if (low) document.documentElement.dataset.lowEnd = "true";
       // low-end still gets fibre, just a cheaper tile — never a flat white page
       const tile = makeFibreTile(low ? 64 : 128, low ? 0.4 : 0.55);
       if (cancelled || !layerB.current) return;
@@ -437,8 +456,9 @@ export function Atmosphere() {
               gradient here would travel with the pan for nothing. */}
           <g stroke="var(--color-rule)" strokeWidth={1.1} opacity={0.6}>
             <use href="#topo-lines" />
-            {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
-            <use href="#topo-lines" x={TOPO_BOX.w} />
+            {/* Off the viewBox, and clipped by the SVG, until the pan brings it
+                in — so it is only worth rendering when there is a pan. */}
+            {motion && <use href="#topo-lines" x={TOPO_BOX.w} />}
           </g>
         </g>
       </svg>
@@ -454,10 +474,10 @@ export function Atmosphere() {
 
           One layer per colour, because the colour has to stay where the design
           put it while the geometry underneath it keeps moving. */}
-      <HotField mask={EMBER_ZONES} stroke={EMBER} />
+      <HotField mask={EMBER_ZONES} stroke={EMBER} wrap={motion} />
       {/* Indigo is a darker hue than the ember mix, so at a shared opacity it
           reads as the weaker of the two. Lifted toward white to match it. */}
-      <HotField mask={VIOLET_ZONE} stroke="color-mix(in oklch, var(--color-indigo), white 26%)" />
+      <HotField mask={VIOLET_ZONE} stroke="color-mix(in oklch, var(--color-indigo), white 26%)" wrap={motion} />
 
       {/* C2c · the same field again, brighter, seen through a disc that follows
           the pointer: the contours near the cursor light up as if the map were
@@ -485,7 +505,7 @@ export function Atmosphere() {
           {/* The core pass only. Splitting the hot layer by colour doubled its
               geometry, and this is where it is paid back: under a 520px disc a
               halo is not what you notice, the beading is. */}
-          <HotField mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} />
+          <HotField mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} wrap={motion} />
         </div>
       </div>
 

@@ -348,6 +348,21 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .glass-lit:hover::after, .glass-lit:focus-within::after { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .glass-lit::after { transition: none; } }
 
+/* The blur IS expensive — measured at ~13% of main-thread task time across a
+   scroll, over the five .glass surfaces, at 6x CPU throttle. So it keeps an
+   escape hatch; it is just keyed to the right signal now. `data-low-end` is set
+   from the same `isLowEnd()` the fibre layer already uses (<=4 cores, or a
+   coarse pointer), i.e. "this device cannot afford it", which is the question
+   that was actually being asked. It was previously keyed to reduced motion,
+   which answers a completely different question and punished a large set of
+   Windows machines for an accessibility preference. */
+:root[data-low-end="true"] .glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgb(22 20 28 / 0.92);
+  background: color-mix(in oklch, var(--color-paper-warm) 92%, transparent);
+}
+
 /* NOTE: reduced motion does NOT drop the blur.
    It used to — `backdrop-filter: none` plus a 94% flat tint — on the reasoning
    that the blur is decorative GPU cost. That was wrong twice over. A blur is
