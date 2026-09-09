@@ -694,19 +694,25 @@ it is independent of the paint box's height.
 
 The navbar, both nav panels, the scheme cards, the tri-fold pillars, the demo
 console and its open case, and the join form's choice boxes are now frosted
-panes over the gradient: one `.glass` utility (58% tint, `blur(20px)
-saturate(1.4)`, a 18% ink hairline) plus `.glass-lit` for the lit top edge that
+panes over the gradient: one `.glass` utility (20% tint, `blur(7px)
+saturate(1.5)`, a 26% ink hairline, and a drop shadow) plus `.glass-lit` for the lit top edge that
 makes a pane read as glass rather than as a grey box.
 
-Tuned by looking: at the first value (72% tint / 16px) the cards read as flat
-dark rectangles — on a dark ground a blur has nothing visible to work with until
-the tint opens up. At 58% the mesh's colour shifts through the panes (warm on
-the left of a row, indigo on the right) and the contour field blurs behind them.
+Tuned in three passes, each judged from a screenshot. 72% tint / 16px blur: flat
+dark rectangles. 58% / 20px: the mesh's colour came through but the pattern did
+not — **the blur mattered as much as the tint**, because at 20px a 1px contour
+hairline is smeared into nothing, so there was no pattern left to see through at
+any opacity. 20% / 7px: the contour field and the 48px grid now run visibly
+*through* the panes, continuous with the ground around them.
+
+At 20% the pane barely tints anything, so the EDGE carries the surface: the ink
+hairline goes to 26% and a `0 10px 40px -12px` shadow lifts the pane off the
+ground. Without that the cards stop reading as cards.
 
 | Check | Result |
 |---|---|
 | Contrast, all 7 routes, panel tints composited over the ground before judging | **0 failures** |
-| Frame time scrolling over the frosted surfaces | median 16.7 / p95 17.7 / **0 dropped, 0 long tasks** |
+| Frame time scrolling over the frosted surfaces | median 16.7 / p95 17.7 / **0 dropped, 0 long tasks** (re-measured at the final values) |
 
 `backdrop-filter` is dropped entirely under `prefers-reduced-motion` in favour of
 a 94% flat tint — the effect is decorative and it is the one property here that
@@ -720,7 +726,8 @@ hairline.
 
 Evidence: `evidence/rev-42-glass-schemes-1440.png`,
 `rev-43-glass-demo-1440.png`, `rev-48-glass-trifold-open-1440.png`,
-`rev-45-glass-join-1440.png`, `rev-47-glass-mobilenav-390.png`.
+`rev-45-glass-join-1440.png`, `rev-47-glass-mobilenav-390.png`,
+`rev-53-glass-transparent.png` (the final, see-through pass).
 
 ## Scars
 Things that broke and how they were fixed. Do not repeat these.
