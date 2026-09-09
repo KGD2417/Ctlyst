@@ -1000,3 +1000,21 @@ Things that broke and how they were fixed. Do not repeat these.
   the radius, then the last few percent given up across the outer half — see `TAPER`,
   seven stops. Five still banded. Anchor poles past the viewport edge as well; a
   visible far arc reads as a spot no matter how good the falloff is.
+- **The compositor pan costs 119 MB of GPU texture — measured, and the reason it is not on main.**
+  Moving the pan off the SVG group onto a promoted HTML div works and is mechanically
+  verified (the pan target is a DIV writing a CSS `translate3d`, no SVG transform
+  attribute, slice scale unchanged). But each panning box is two field widths, 2880x900
+  CSS, and at `devicePixelRatio: 2` that is 41.5 MB of texture each — three of them,
+  118.7 MB. main's only promoted layer is the 520px bloom window at 4.1 MB. The trade is
+  32,320 stroke segments repainted per frame against ~119 MB of VRAM, and paint wins.
+  It is kept on branch `compositor-pan-attempt`. To make it viable, clip each layer to
+  its zone (ember ~45% of the viewport, violet ~35%) so the texture is small, which means
+  positioning each pan box against the viewport rather than its clip box.
+- **Two harness traps that cost most of a session between them.** A tab that has been
+  through many HMR cycles, `location.reload()`s, or a `browser_resize` reaches a state
+  where it screenshots as a blank page with correct DOM and zero console errors. Only a
+  brand-new tab is trustworthy. And `document.elementsFromPoint` skips `pointer-events:
+  none`, so it can NEVER see the ambient root — it is useless for deciding whether an
+  ambient layer is painting over the page. Use `display: none` on the suspect layer and
+  screenshot in a fresh tab instead. Three separate wrong diagnoses came out of trusting
+  those two signals.
