@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { SHAPES, NATURAL, arrangementFor, type Placement } from "@/lib/guilloche-paths";
@@ -116,35 +116,93 @@ const WASH: Record<string, string> = {
   "/schemes": "var(--color-gold)",
 };
 
-/** One masked, panning copy of the lit contour field. */
-function HotField({ mask, stroke, passes = GLOW, wrap = true }: {
-  mask: string;
-  stroke: string;
-  passes?: readonly { w: number; o: number; dash?: string }[];
-  /** The second copy, parked one field width along, exists ONLY so the pan can
-   *  loop seamlessly. With the pan off it sits off-screen forever and is never
-   *  reached — pure raster cost for something nobody can see. Dropping it halves
-   *  the field's geometry for every reduced-motion visitor, who is also the
-   *  visitor most likely to be on a machine that needed the help. */
-  wrap?: boolean;
-}) {
+/**
+ * The field, serialised into a standalone SVG document as a data URL.
+ *
+ * This is the fix for the lag. Panning a `<g>` inside inline SVG is a
+ * PAINT-time transform: Chromium re-rasterises every stroke under it on every
+ * frame — 32,320 segments, 8,080 of them dashed, sixty times a second. A Mac
+ * absorbs that. A Windows machine on integrated graphics, or one where Chrome
+ * has fallen back to software rasterisation, does not, and that is the whole
+ * of the reported lag.
+ *
+ * An <img> is rasterised ONCE at its layout size and cached. Translating it
+ * afterwards re-blits a bitmap instead of re-running the vector rasteriser, so
+ * the per-frame cost stops scaling with the number of segments at all.
+ *
+ * Both copies live inside the one document (viewBox is two field widths) so the
+ * seamless wrap survives, and the paths are written once and `use`d per pass —
+ * the data URL stays around 60KB rather than triple that.
+ */
+function fieldImage(paths: string[], stroke: string, passes: readonly Pass[], wrap: boolean) {
+  const W = TOPO_BOX.w, H = TOPO_BOX.h;
+  // Without the wrap copy the document is one field wide, not two, or the slice
+  // would fit 4400 units of viewBox around 2200 units of drawing and halve the
+  // scale of every contour.
+  const boxW = wrap ? W * 2 : W;
+  // non-scaling-stroke has to survive serialisation: the image is drawn at
+  // ~0.65 of user space, and without it every stroke width and dash gap comes
+  // out a third thin.
+  const ns = ` vector-effect="non-scaling-stroke"`;
+  const defs = paths
+    .map((d, i) => `<path d="${d}" opacity="${(1 - Math.abs(paths.length / 2 - i) * 0.08).toFixed(3)}"${ns}/>`)
+    .join("");
+  const layer = passes
+    .map((p) => {
+      const dash = p.dash ? ` stroke-dasharray="${p.dash}" stroke-linecap="round"` : "";
+      const copies = `<use href="#f"/>` + (wrap ? `<use href="#f" x="${W}"/>` : "");
+      return `<g fill="none" stroke="${stroke}" stroke-width="${p.w}" opacity="${p.o}"${dash}${ns}>${copies}</g>`;
+    })
+    .join("");
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${boxW} ${H}" ` +
+    `preserveAspectRatio="xMidYMid slice">` +
+    `<defs><g id="f">${defs}</g></defs>${layer}</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+type Pass = { w: number; o: number; dash?: string };
+
+/**
+ * Resolve a CSS colour to a concrete value.
+ *
+ * The serialised field is a standalone SVG document, so it cannot see this
+ * page's custom properties — `var(--color-rule)` and `color-mix(...)` both
+ * resolve to nothing inside it and every contour renders black on black. The
+ * browser is the only thing that knows what those tokens currently mean, so ask
+ * it, once, and bake the answer into the image.
+ */
+function resolveColor(value: string) {
+  const probe = document.createElement("span");
+  probe.style.cssText = "position:absolute;visibility:hidden";
+  probe.style.color = value;
+  document.body.appendChild(probe);
+  const out = getComputedStyle(probe).color;
+  probe.remove();
+  return out;
+}
+
+/** One masked, panning copy of the field — as a bitmap, not live geometry. */
+function HotField({ mask, src, wrap }: { mask: string; src: string; wrap: boolean }) {
   return (
-    <div className="absolute inset-0" style={{ WebkitMaskImage: mask, maskImage: mask }}>
-      <svg
-        viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
-        preserveAspectRatio="xMidYMid slice"
-        className="h-full w-full"
-      >
-        <g data-topo-pan style={{ willChange: "transform" }}>
-          {passes.map((pass) => (
-            <g key={pass.w} fill="none" stroke={stroke} strokeWidth={pass.w} opacity={pass.o}
-               strokeDasharray={pass.dash} strokeLinecap={pass.dash ? "round" : undefined}>
-              <use href="#topo-lines" />
-              {wrap && <use href="#topo-lines" x={TOPO_BOX.w} />}
-            </g>
-          ))}
-        </g>
-      </svg>
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{ WebkitMaskImage: mask, maskImage: mask }}
+    >
+      {/* Two field widths wide, so -50% of it is exactly one field width on
+          screen and copy B lands where copy A began. `alt=""` and the parent's
+          aria-hidden keep it out of the accessibility tree. */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- a runtime-built
+          data URL, decorative and aria-hidden; next/image cannot optimise it
+          and would only add a loader round trip. */}
+      <img
+        data-topo-pan
+        src={src}
+        alt=""
+        draggable={false}
+        className="absolute inset-y-0 left-0 h-full max-w-none"
+        style={{ width: wrap ? "200%" : "100%" }}
+      />
     </div>
   );
 }
@@ -186,6 +244,25 @@ export function Atmosphere() {
   const [topo, setTopo] = useState<string[]>([]);
   /** Is the field allowed to pan? Drives whether the wrap copy is worth drawing. */
   const [motion, setMotion] = useState(true);
+
+
+  /**
+   * The field, pre-rasterised per colour. Derived, not state: it is a pure
+   * function of the contours and whether the pan is running, and it is only
+   * ever non-null on the client because `topo` is built there.
+   */
+  const src = useMemo(() => {
+    if (!topo.length) return null;
+    const dim = resolveColor("var(--color-rule)");
+    const ember = resolveColor(EMBER);
+    const violet = resolveColor("color-mix(in oklch, var(--color-indigo), white 26%)");
+    return {
+      dim: fieldImage(topo, dim, [{ w: 1.1, o: 0.6 }], motion),
+      ember: fieldImage(topo, ember, GLOW, motion),
+      violet: fieldImage(topo, violet, GLOW, motion),
+      bloom: fieldImage(topo, ember, GLOW.slice(2), motion),
+    };
+  }, [topo, motion]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -290,10 +367,16 @@ export function Atmosphere() {
       // creeps out and reverses — which is what "always animated" has to mean
       // for a background you sit in front of.
       if (!reduced.matches) {
-        // 2200 user units over 110s ≈ 16px/s on a 1440 viewport: slow enough to
+        // xPercent, NOT x. The target used to be an SVG <g>, where `x: -2200`
+        // meant 2200 user units — exactly one field width. It is now an <img>
+        // two field widths wide, where -2200 would mean 2200 CSS pixels and the
+        // wrap would land in the wrong place and visibly jump every cycle.
+        // -50% of a two-field-wide box is one field width at any viewport.
+        //
+        // One field width over 110s ≈ 16px/s on a 1440 viewport: slow enough to
         // stay background, fast enough that the page is visibly alive if you
         // look at it for a moment.
-        gsap.to("[data-topo-pan]", { x: -TOPO_BOX.w, duration: 110, ease: "none", repeat: -1 });
+        gsap.to("[data-topo-pan]", { xPercent: -50, duration: 110, ease: "none", repeat: -1 });
       }
 
       // ── scroll parallax + pointer lerp, both on the ticker ───────────────
@@ -369,7 +452,11 @@ export function Atmosphere() {
     }, root);
 
     return () => ctx.revert();
-  }, [pathname]);
+    // `src` matters: the pan selects [data-topo-pan], and those elements are the
+    // field images, which do not exist until the contours have been built off
+    // the idle callback. Keyed on pathname alone, this effect ran once on mount
+    // against an empty selector and the field never moved at all.
+  }, [pathname, src, motion]);
 
   return (
     <div ref={root} aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -417,67 +504,25 @@ export function Atmosphere() {
         }}
       />
 
-      {/* C2b · contour lines. Baked once, then only translated — the reference
-          shader animates by panning its noise field, which is the same thing.
+      {/* C2b · contour lines, pre-rasterised. Each layer is one <img>, so the
+          browser rasterises the vectors once and every frame of the pan is a
+          bitmap blit. Previously this was inline SVG and the pan transformed a
+          <g>, which is a paint-time transform: 32,320 stroke segments re-run
+          through the rasteriser sixty times a second.
 
-          The field is drawn TWICE. This copy is the dark one: a single hairline
-          in near-black bronze, present everywhere, which is the terrain. The
-          layer below it is the same geometry lit up inside three small zones,
-          which is the energy. A field that is uniformly bright everywhere has no
-          focus — the reference keeps the map dark and puts the light in corners. */}
-      <svg
-        viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 h-full w-full"
-        style={{
-          // The field is loudest at the edges and quietest where the type sits.
-          // Without this the contours run straight through the headline and the
-          // page has no centre — the reference keeps a calm pocket for the words
-          // and pushes the energy to the margins.
-          WebkitMaskImage: CALM_CENTRE,
-          maskImage: CALM_CENTRE,
-        }}
-      >
-        <defs>
-          {/* Geometry only — no stroke, so every consumer colours it itself.
-              Rendering it per consumer doubled 3.5k segments of DOM and put a
-              50ms task back on the load path, so it is <use>d instead. */}
-          <g id="topo-lines" fill="none" vectorEffect="non-scaling-stroke">
-            {topo.map((d, i) => (
-              // Bands nearer the middle of the field carry more weight, so
-              // the set reads as terrain with a ridge rather than a hatch.
-              <path key={i} d={d} opacity={(1 - Math.abs(topo.length / 2 - i) * 0.08).toFixed(3)}
-                    vectorEffect="non-scaling-stroke" />
-            ))}
-          </g>
-        </defs>
-        <g data-topo-pan style={{ willChange: "transform" }}>
-          {/* Flat, not a ramp: at this darkness a gradient is invisible, and a
-              gradient here would travel with the pan for nothing. */}
-          <g stroke="var(--color-rule)" strokeWidth={1.1} opacity={0.6}>
-            <use href="#topo-lines" />
-            {/* Off the viewBox, and clipped by the SVG, until the pan brings it
-                in — so it is only worth rendering when there is a pan. */}
-            {motion && <use href="#topo-lines" x={TOPO_BOX.w} />}
-          </g>
-        </g>
-      </svg>
-
-      {/* C2b-hot · the same contours, lit. Masked in CSS rather than with an SVG
-          mask so the mask is a compositor input, not something the field has to
-          be re-rasterised through on every pan.
-
-          Three strokes per contour: a wide faint halo, a mid, and a dashed
-          hairline core. That is a bloom without a filter — `filter: blur()`
-          over a fullscreen layer re-rasterises on every pan, where more strokes
-          are just more geometry in the same raster.
-
-          One layer per colour, because the colour has to stay where the design
-          put it while the geometry underneath it keeps moving. */}
-      <HotField mask={EMBER_ZONES} stroke={EMBER} wrap={motion} />
-      {/* Indigo is a darker hue than the ember mix, so at a shared opacity it
-          reads as the weaker of the two. Lifted toward white to match it. */}
-      <HotField mask={VIOLET_ZONE} stroke="color-mix(in oklch, var(--color-indigo), white 26%)" wrap={motion} />
+          The dark copy is the terrain — one flat hairline, everywhere.
+          CALM_CENTRE keeps it out of the headline, so the page has a centre.
+          The lit copies are the same geometry inside the three zones: a wide
+          faint halo, a mid, and a dashed core that reads as a filament of
+          particles. One layer per colour, because the colour has to stay where
+          the design put it while the geometry underneath keeps moving. */}
+      {src && (
+        <>
+          <HotField mask={CALM_CENTRE} src={src.dim} wrap={motion} />
+          <HotField mask={EMBER_ZONES} src={src.ember} wrap={motion} />
+          <HotField mask={VIOLET_ZONE} src={src.violet} wrap={motion} />
+        </>
+      )}
 
       {/* C2c · the same field again, brighter, seen through a disc that follows
           the pointer: the contours near the cursor light up as if the map were
@@ -502,10 +547,9 @@ export function Atmosphere() {
         }}
       >
         <div ref={bloomInner} className="absolute left-0 top-0 h-screen w-screen" style={{ willChange: "transform" }}>
-          {/* The core pass only. Splitting the hot layer by colour doubled its
-              geometry, and this is where it is paid back: under a 520px disc a
-              halo is not what you notice, the beading is. */}
-          <HotField mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} wrap={motion} />
+          {/* The core pass only: under a 520px disc a halo is not what you
+              notice, the beading is. */}
+          {src && <HotField mask="linear-gradient(#000, #000)" src={src.bloom} wrap={motion} />}
         </div>
       </div>
 
