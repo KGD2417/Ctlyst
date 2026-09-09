@@ -115,7 +115,7 @@ export function CurtainProvider({ children }: { children: React.ReactNode }) {
         className="pointer-events-none fixed inset-0 z-[200] flex items-center justify-center bg-crimson"
         style={{ transform: "translateY(100%)", visibility: "hidden", willChange: "transform" }}
       >
-        {/* §9.6 misregistration — use 1 of 2. The mark prints slightly out of
+        {/* §9.6 misregistration — the only remaining use. The mark prints slightly out of
             register, then snaps true, like a plate not quite aligned.
             Words set smaller and in italic than the numerals — "The Front Door"
             at numeral size would run off both edges of a phone. */}

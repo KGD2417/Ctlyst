@@ -1031,3 +1031,18 @@ Things that broke and how they were fixed. Do not repeat these.
   appears. Both fixed. Reduce now means: no transforms, no scrub, no pin, no cursor, no
   ambient pan — but the material and the fades stay.
   Test it with `page.emulateMedia({ reducedMotion: 'reduce' })`, not by reasoning about it.
+- **`mix-blend-mode` silently degenerates when its stacking context has a transparent
+  backdrop.** §9.6's headline misregistration painted a crimson rectangle over the whole
+  headline block on every home load — most visible arriving from another route, where
+  the curtain lifts to reveal it. `.misreg::after` is `background: crimson;
+  mix-blend-mode: multiply; opacity: .55 -> 0`, which on paper sinks into the page. But
+  an element blends with the backdrop *inside its own stacking context*, and after the
+  dark re-skin the nearest one is `<main>` (z-index 1) — whose group is transparent,
+  because the ambient background is a sibling BEHIND main, not inside it. Multiply
+  against a transparent backdrop returns the source unchanged, so it painted flat
+  crimson. Removed rather than patched: on a near-black ground the effect has nothing to
+  sink into, and as a full-block rectangle it never described a misregistered glyph
+  anyway. The curtain's use (an offset copy of the mark, transform only) is untouched
+  and still correct — keep `--misreg`, it feeds that one.
+  General lesson: a blend mode that "does nothing" is usually a stacking-context bug,
+  not a browser bug. Check what is actually inside the group before trusting it.

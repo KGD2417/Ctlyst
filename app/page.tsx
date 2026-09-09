@@ -35,8 +35,7 @@ export default function Home() {
         </ul>
 
         <h2 className="t-mono-label text-gold">Bridging the gap between ideas and execution</h2>
-        {/* §9.6 misregistration — use 2 of 2 (the curtain numeral is use 1) */}
-        <SplitLines className="t-display-xl mx-auto mt-8 max-w-[14ch]" delay={0.1} trigger={false} misregister>
+        <SplitLines className="t-display-xl mx-auto mt-8 max-w-[14ch]" delay={0.1} trigger={false}>
           <>
             No good idea should fail for want of{" "}
             <em className="italic grad-text">guidance.</em>

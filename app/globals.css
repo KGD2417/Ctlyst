@@ -57,6 +57,10 @@
   --stagger-card: 0.09s;
   --stagger-row:  0.07s;
 
+  /* ── misregistration (§9.6) · one use now: the curtain mark. The headline's
+     use was removed — see the note further down. ──────────────────────── */
+  --misreg: 3px;
+
   /* ── ambient drift · all prime, so the set never re-syncs ─────── */
   --drift-a: 47s;
   --drift-b: 61s;
@@ -75,8 +79,6 @@
      same weight read as clutter rather than as depth. */
   --guilloche-opacity: 0.26;
 
-  /* ── misregistration (§9.6) · two uses across the whole site ──── */
-  --misreg: 3px;
 }
 
 html {
@@ -142,26 +144,13 @@ main, footer { position: relative; z-index: 1; }
 .sl-line { display: block; }
 .sl-line-mask { overflow-clip-margin: 0.3em; }
 
-/* §9.6 misregistration: the crimson channel prints slightly out of register for
-   the duration of the reveal, then snaps true. Two uses site-wide. */
-@keyframes misreg-settle {
-  from { transform: translate(var(--misreg), calc(var(--misreg) * -0.4)); opacity: .55; }
-  to   { transform: none; opacity: 0; }
-}
-.misreg { position: relative; }
-.misreg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: var(--color-crimson);
-  mix-blend-mode: multiply;
-  opacity: 0;
-  animation: misreg-settle 1.1s var(--ease-brand) 0.15s 1 both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .misreg::after { animation: none; opacity: 0; }
-}
+/* §9.6's misregistration was REMOVED, not disabled — see PROGRESS Scars.
+   It painted a crimson rectangle over the headline block on every home load.
+   `mix-blend-mode: multiply` needs a backdrop inside its own stacking context,
+   and after the dark re-skin the nearest one is <main> (z-index 1), whose group
+   is transparent — the ambient background is a sibling behind it, not inside
+   it. Multiply against a transparent backdrop returns the source unchanged, so
+   a print effect meant to sink into paper painted flat crimson instead. */
 
 /* Figure size for multi-column stat rows. `t-mono-data` (up to 5rem) is sized
    for the wide scheme cards; in a 4-up grid it overflows the column. */

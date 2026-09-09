@@ -17,13 +17,12 @@ gsap.registerPlugin(SplitText, ScrollTrigger);
  * a resize or a route change cannot leave orphaned <div>s behind (INV-1).
  */
 export function SplitLines({
-  children, className, delay = 0, trigger = true, misregister = false,
+  children, className, delay = 0, trigger = true,
 }: {
   children: React.ReactNode;
   className?: string;
   delay?: number;
   trigger?: boolean;
-  misregister?: boolean;
 }) {
   const el = useRef<HTMLDivElement>(null);
 
@@ -80,7 +79,7 @@ export function SplitLines({
   }, []);
 
   return (
-    <div ref={scope} className={misregister ? "misreg" : undefined}>
+    <div ref={scope}>
       {/* Rendered VISIBLE. Starting at opacity:0 and waiting for JS made the
           hero invisible to the Largest Contentful Paint until the reveal ran,
           so LCP was gated on our own animation — 2.72s, with the LCP element
