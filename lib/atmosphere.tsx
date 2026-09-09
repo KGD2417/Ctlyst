@@ -116,20 +116,41 @@ const WASH: Record<string, string> = {
   "/schemes": "var(--color-gold)",
 };
 
-/** One masked, panning copy of the lit contour field. */
-function HotField({ mask, stroke, passes = GLOW }: {
+/**
+ * One masked, panning copy of the contour field.
+ *
+ * The pan is a CSS transform on a promoted HTML div — NOT a transform on an SVG
+ * <g>. That distinction is the whole point of this shape. A transform on an SVG
+ * group is a paint-time transform: Chromium re-rasterises every stroke segment
+ * under it on every frame, which at 60Hz was tens of thousands of dashed
+ * segments a second and is what made the page feel heavy. A transform on a div
+ * with `will-change: transform` is a compositor move: the field is rasterised
+ * once and thereafter the GPU slides the texture, for zero per-frame paint.
+ *
+ * The panning box is two field widths wide and the viewBox is doubled to match,
+ * so both copies live inside the svg and nothing has to overflow it. The slice
+ * scale is unchanged by that doubling — 2× the box into 2× the viewBox is the
+ * same ratio — so the contours are exactly the size they were.
+ *
+ * The mask stays on the OUTER, viewport-sized div. Masking the panning box
+ * instead would drag the hot zones along with the contours.
+ */
+function Field({ mask, stroke, passes = GLOW }: {
   mask: string;
   stroke: string;
   passes?: readonly { w: number; o: number; dash?: string }[];
 }) {
   return (
-    <div className="absolute inset-0" style={{ WebkitMaskImage: mask, maskImage: mask }}>
-      <svg
-        viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
-        preserveAspectRatio="xMidYMid slice"
-        className="h-full w-full"
-      >
-        <g data-topo-pan style={{ willChange: "transform" }}>
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{ WebkitMaskImage: mask, maskImage: mask }}
+    >
+      <div data-topo-pan className="absolute inset-y-0 left-0 w-[200%]" style={{ willChange: "transform" }}>
+        <svg
+          viewBox={`0 0 ${TOPO_BOX.w * 2} ${TOPO_BOX.h}`}
+          preserveAspectRatio="xMidYMid slice"
+          className="h-full w-full"
+        >
           {passes.map((pass) => (
             <g key={pass.w} fill="none" stroke={stroke} strokeWidth={pass.w} opacity={pass.o}
                strokeDasharray={pass.dash} strokeLinecap={pass.dash ? "round" : undefined}>
@@ -137,8 +158,8 @@ function HotField({ mask, stroke, passes = GLOW }: {
               <use href="#topo-lines" x={TOPO_BOX.w} />
             </g>
           ))}
-        </g>
-      </svg>
+        </svg>
+      </div>
     </div>
   );
 }
@@ -274,7 +295,11 @@ export function Atmosphere() {
         // 2200 user units over 110s ≈ 16px/s on a 1440 viewport: slow enough to
         // stay background, fast enough that the page is visibly alive if you
         // look at it for a moment.
-        gsap.to("[data-topo-pan]", { x: -TOPO_BOX.w, duration: 110, ease: "none", repeat: -1 });
+        // The box is two field widths wide, so -50% of it is exactly one field
+        // width on screen: copy B lands where copy A began. xPercent resolves to
+        // a CSS translate on a div, which is the composited path — `x` in user
+        // units on an SVG group was the paint-time one.
+        gsap.to("[data-topo-pan]", { xPercent: -50, duration: 110, ease: "none", repeat: -1 });
       }
 
       // ── scroll parallax + pointer lerp, both on the ticker ───────────────
@@ -397,28 +422,15 @@ export function Atmosphere() {
       {/* C2b · contour lines. Baked once, then only translated — the reference
           shader animates by panning its noise field, which is the same thing.
 
-          The field is drawn TWICE. This copy is the dark one: a single hairline
-          in near-black bronze, present everywhere, which is the terrain. The
-          layer below it is the same geometry lit up inside three small zones,
-          which is the energy. A field that is uniformly bright everywhere has no
-          focus — the reference keeps the map dark and puts the light in corners. */}
-      <svg
-        viewBox={`0 0 ${TOPO_BOX.w} ${TOPO_BOX.h}`}
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 h-full w-full"
-        style={{
-          // The field is loudest at the edges and quietest where the type sits.
-          // Without this the contours run straight through the headline and the
-          // page has no centre — the reference keeps a calm pocket for the words
-          // and pushes the energy to the margins.
-          WebkitMaskImage: CALM_CENTRE,
-          maskImage: CALM_CENTRE,
-        }}
-      >
+          Geometry only, with no stroke, so every layer below colours it itself.
+          Rendering it per layer put 2k segments of DOM and a 50ms task back on
+          the load path each time, so it is defined once and <use>d.
+
+          The holder is zero-sized rather than `display: none`: a `<defs>` inside
+          a hidden subtree has no render object, and `<use>` cannot reference
+          what was never laid out. */}
+      <svg aria-hidden="true" className="absolute" style={{ width: 0, height: 0, overflow: "hidden" }}>
         <defs>
-          {/* Geometry only — no stroke, so every consumer colours it itself.
-              Rendering it per consumer doubled 3.5k segments of DOM and put a
-              50ms task back on the load path, so it is <use>d instead. */}
           <g id="topo-lines" fill="none" vectorEffect="non-scaling-stroke">
             {topo.map((d, i) => (
               // Bands nearer the middle of the field carry more weight, so
@@ -428,16 +440,18 @@ export function Atmosphere() {
             ))}
           </g>
         </defs>
-        <g data-topo-pan style={{ willChange: "transform" }}>
-          {/* Flat, not a ramp: at this darkness a gradient is invisible, and a
-              gradient here would travel with the pan for nothing. */}
-          <g stroke="var(--color-rule)" strokeWidth={1.1} opacity={0.6}>
-            <use href="#topo-lines" />
-            {/* Off the viewBox, and clipped by the SVG, until the pan brings it in. */}
-            <use href="#topo-lines" x={TOPO_BOX.w} />
-          </g>
-        </g>
       </svg>
+
+      {/* The dark copy: one flat hairline, present everywhere, which is the
+          terrain. The layers below are the same geometry lit inside three small
+          zones, which is the energy. A field uniformly bright everywhere has no
+          focus — the reference keeps the map dark and puts the light in corners.
+
+          CALM_CENTRE keeps it out of the headline: the field is loudest at the
+          edges and quietest where the type sits, so the page has a centre. Flat
+          rather than a ramp, because at this darkness a gradient is invisible
+          and would only travel with the pan for nothing. */}
+      <Field mask={CALM_CENTRE} stroke="var(--color-rule)" passes={[{ w: 1.1, o: 0.6 }]} />
 
       {/* C2b-hot · the same contours, lit. Masked in CSS rather than with an SVG
           mask so the mask is a compositor input, not something the field has to
@@ -450,10 +464,10 @@ export function Atmosphere() {
 
           One layer per colour, because the colour has to stay where the design
           put it while the geometry underneath it keeps moving. */}
-      <HotField mask={EMBER_ZONES} stroke={EMBER} />
+      <Field mask={EMBER_ZONES} stroke={EMBER} />
       {/* Indigo is a darker hue than the ember mix, so at a shared opacity it
           reads as the weaker of the two. Lifted toward white to match it. */}
-      <HotField mask={VIOLET_ZONE} stroke="color-mix(in oklch, var(--color-indigo), white 26%)" />
+      <Field mask={VIOLET_ZONE} stroke="color-mix(in oklch, var(--color-indigo), white 26%)" />
 
       {/* C2c · the same field again, brighter, seen through a disc that follows
           the pointer: the contours near the cursor light up as if the map were
@@ -481,7 +495,7 @@ export function Atmosphere() {
           {/* The core pass only. Splitting the hot layer by colour doubled its
               geometry, and this is where it is paid back: under a 520px disc a
               halo is not what you notice, the beading is. */}
-          <HotField mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} />
+          <Field mask="linear-gradient(#000, #000)" stroke={EMBER} passes={GLOW.slice(2)} />
         </div>
       </div>
 
