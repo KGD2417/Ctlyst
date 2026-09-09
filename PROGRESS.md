@@ -975,12 +975,28 @@ Things that broke and how they were fixed. Do not repeat these.
   hidden, because the cost is on the raster thread. Count the geometry instead.
   Fix: coarser field (132×92×12 → 100×70×9) and one fewer glow pass → 24,240/frame,
   8,080 dashed. Below the 42,912 the page did before the glow work.
-- **Do not try to promote the pan to the compositor by restructuring the SVG layers.**
-  Tried twice: (a) `overflow: visible` on the svg with the pan moved to a wrapping div,
-  (b) a double-width viewBox in a 200%-wide panning div. BOTH made the whole ambient
-  stack composite above `main` — the page rendered as background only, with every
-  section still `opacity: 1` and in layout, and zero console errors. Variant (b) also
-  stopped `#topo-lines` resolving when its `<defs>` moved to a `h-0 w-0` svg. Diagnosis
-  that works: `display:none` the ambient root and screenshot — if the content appears,
-  it is a compositing problem, not a paint or opacity one. If the pan ever has to get
-  off the paint path, do it by making the field cheap enough not to need it.
+- **A blank page after editing `atmosphere.tsx` is Fast Refresh, not your change.**
+  Editing the file re-runs the gsap context; the split-reveal entrance timeline reverts
+  to its initial state — text translated out of its `.sl-line-mask` — and does not
+  replay, so the page renders as background only with every section still `opacity: 1`
+  and in layout and zero console errors. `browser_navigate` to the same URL is not
+  enough; it needs `location.reload()`.
+  This cost two wrong diagnoses in one session: two attempts to move the contour pan
+  onto the compositor were reverted as "they composite the ambient stack above main",
+  which they never did. **Before blaming a layer, `document.elementsFromPoint` at the
+  headline.** If the top hit is `sl-line-mask`, the entrance never ran and the render
+  is fine. If it is an ambient layer, then it is a compositing problem.
+- **An SVG gradient cannot colour a field that pans.** The lit contours were stroked
+  with `url(#topo-ink)`, `gradientUnits="userSpaceOnUse"`. That user space is inside
+  the panning `<g>`, so the ramp travelled with the contours: the right edge rendered
+  ember filaments under a violet glow, and the second copy — the one the wrap brings
+  in — fell past the last stop and arrived uniformly indigo. No fix inside the gradient
+  works; `spreadMethod` repeats or reflects along the gradient vector, which a
+  horizontal pan does not align to. Fix: one masked layer per colour, flat stroke,
+  colour pinned to the screen by the mask.
+- **A two-stop radial reads as a pasted-on spot, however soft the second stop is.**
+  `colour, transparent 70%` spends its whole alpha on one ramp and leaves a rim you
+  can trace. What removes the edge is the distribution: peak inside the first fifth of
+  the radius, then the last few percent given up across the outer half — see `TAPER`,
+  seven stops. Five still banded. Anchor poles past the viewport edge as well; a
+  visible far arc reads as a spot no matter how good the falloff is.
