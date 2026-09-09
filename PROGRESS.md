@@ -966,3 +966,21 @@ Things that broke and how they were fixed. Do not repeat these.
   `absolute inset-0` div — viewport-sized, no transform, no `will-change`. Also removes
   the coordinate trap where a pole "at 4% 6%" landed at viewport −19% because the box
   started at −25% and was 1.5× scale.
+- **The contour pan is a repaint, not a composite — so segment count is a frame budget.**
+  Panning `<g data-topo-pan>` transforms an SVG group, which Chromium repaints rather
+  than compositing, so every stroke segment is re-rasterised every frame. The glow pass
+  structure quietly made that 57,216 segments/frame, 28,608 of them dashed — and dashing
+  is the most expensive thing Skia can be asked to stroke. rAF frame-time is BLIND to
+  this: it read a clean 16.7ms median in every configuration, including with layers
+  hidden, because the cost is on the raster thread. Count the geometry instead.
+  Fix: coarser field (132×92×12 → 100×70×9) and one fewer glow pass → 24,240/frame,
+  8,080 dashed. Below the 42,912 the page did before the glow work.
+- **Do not try to promote the pan to the compositor by restructuring the SVG layers.**
+  Tried twice: (a) `overflow: visible` on the svg with the pan moved to a wrapping div,
+  (b) a double-width viewBox in a 200%-wide panning div. BOTH made the whole ambient
+  stack composite above `main` — the page rendered as background only, with every
+  section still `opacity: 1` and in layout, and zero console errors. Variant (b) also
+  stopped `#topo-lines` resolving when its `<defs>` moved to a `h-0 w-0` svg. Diagnosis
+  that works: `display:none` the ambient root and screenshot — if the content appears,
+  it is a compositing problem, not a paint or opacity one. If the pan ever has to get
+  off the paint path, do it by making the field cheap enough not to need it.

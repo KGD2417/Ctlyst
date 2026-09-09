@@ -8,8 +8,18 @@
  * which is both cheaper than a fullscreen shader and INV-3-clean.
  *
  * Marching squares, segments left unjoined: joining them into polylines is a
- * chunk of bookkeeping that renders identically for a solid stroke. Nothing
- * dashes these, so nothing needs the continuity.
+ * chunk of bookkeeping that renders identically for a solid stroke.
+ *
+ * The lit passes DO dash these, and a dash pattern restarts at every subpath,
+ * so the beading is per-segment rather than continuous along a contour. At this
+ * segment length that reads as evenly spaced dust, which is the intent — but it
+ * is the reason the dash period is tuned against the cell size and not against
+ * the contour. Joining into polylines is the fix if the beading ever has to
+ * flow along a contour instead of sitting on it.
+ *
+ * The grid is deliberately coarse. Every segment here is re-rasterised on every
+ * frame of the pan, once per stroke pass per copy, so the sampling density is a
+ * frame-budget decision as much as a visual one — see PROGRESS Scars.
  */
 
 const SMOOTH = (t: number) => t * t * (3 - 2 * t);
@@ -70,7 +80,7 @@ export type TopoOptions = {
 
 /** One path string per contour level, outermost first. */
 export function makeTopoPaths({
-  width, height, cols = 132, rows = 92, scale = 4.0, levels = 12, seed = 7,
+  width, height, cols = 100, rows = 70, scale = 4.0, levels = 9, seed = 7,
 }: TopoOptions): string[] {
   const cw = width / cols;
   const ch = height / rows;

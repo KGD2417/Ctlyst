@@ -34,14 +34,18 @@ const BLOOM_DISC =
 const CALM_CENTRE =
   "radial-gradient(ellipse 58% 54% at 50% 46%, rgb(0 0 0 / 0.16) 0%, rgb(0 0 0 / 0.55) 52%, #000 100%)";
 
-/** Halo, mid, core, dust — the strokes that make a contour glow without a
- *  filter. The dashed passes break the core into points, so a lit contour reads
- *  as a filament of particles rather than as a drawn line. */
+/** Halo, mid, core — the strokes that make a contour glow without a filter. The
+ *  dashed core breaks the line into points, so a lit contour reads as a filament
+ *  of particles rather than as a drawn line.
+ *
+ *  There was a fourth pass, a sparse round-cap dash for dust. It cost a whole
+ *  extra copy of the field on every frame of the pan for a sparkle you had to
+ *  look for, so the beading is carried by the core alone and the gap is opened
+ *  up to compensate. */
 const GLOW = [
-  { w: 8, o: 0.13 },
-  { w: 3, o: 0.24 },
-  { w: 1.2, o: 0.9, dash: "2 7" },
-  { w: 2.6, o: 0.85, dash: "0.5 26" },
+  { w: 8, o: 0.15 },
+  { w: 3, o: 0.26 },
+  { w: 1.6, o: 0.95, dash: "2 9" },
 ] as const;
 
 /** Where the field is allowed to light up. Everywhere else it stays dark
